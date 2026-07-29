@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opportunity Log</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.11.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<style>
+:root {
+  --sea-deep: #0F2A2E;
+  --sea-mid: #1C6E62;
+  --sand: #F6F3EC;
+  --sand-dim: #EAE5D8;
+  --ink: #17221F;
+  --ink-soft: #5B6A64;
+  --coral: #C0603E;
+  --gold: #B7913A;
+  --line: #D9D2C0;
+  --strong: #1C6E62;
+  --partial: #B7913A;
+  --weak: #C0603E;
+  --provider: #1B2F5E;
+  --dark-blue: #1B2F5E;
+  --radius: 3px;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--sand);
+  color: var(--ink);
+  font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.mono { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; }
+a { color: var(--sea-mid); }
+
+header {
+  background: var(--sea-deep);
+  color: var(--sand);
+  padding: 30px 32px 0 32px;
+  text-align: center;
+}
+header::after {
+  content: "";
+  display: block;
+  height: 1px;
+  margin-top: 24px;
+  background: linear-gradient(90deg, rgba(246,243,236,0.35), rgba(246,243,236,0.05) 60%, transparent);
+}
+h1 {
+  font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+  font-weight: 600;
+  font-size: 28px;
+  margin: 0 0 8px 0;
+  letter-spacing: 0.2px;
+}
+.subtitle {
+  color: #A9C0BA;
+  font-size: 16px;
+  margin-bottom: 22px;
+  max-width: none;
+  white-space: nowrap;
+}
+.top-actions { position: absolute; top: 28px; right: 32px; display: flex; gap: 10px; }
+
+nav.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 2px;
+  padding: 0 24px;
+  background: var(--sand);
+  border-bottom: 1px solid var(--line);
+}
+nav.tabs button {
+  background: none;
+  border: none;
+  padding: 13px 15px;
+  font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+nav.tabs button.active { color: var(--sea-mid); border-bottom: 2px solid var(--sea-mid); }
+nav.tabs button .count { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 11px; color: var(--ink-soft); margin-left: 4px; }
+
+main { padding: 22px 24px 60px 24px; max-width: 1180px; margin: 0 auto; position: relative; }
+
+.toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+.toolbar h2 { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight: 500; font-style: italic; font-size: 19px; margin: 0; color: var(--sea-deep); }
+button.primary {
+  background: var(--sea-mid); color: white; border: none; padding: 10px 18px;
+  border-radius: var(--radius); font-size: 13.5px; font-weight: 500; cursor: pointer; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+}
+button.primary:hover { background: #175951; }
+button.primary:disabled { background: #8CA9A3; cursor: not-allowed; }
+button.ghost {
+  background: none; border: 1px solid var(--line); color: var(--ink-soft);
+  padding: 9px 14px; border-radius: var(--radius); font-size: 12.5px; cursor: pointer; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+}
+button.ghost:hover { border-color: var(--sea-mid); color: var(--sea-mid); }
+button.danger { color: var(--coral); border-color: var(--coral); background: none; padding: 9px 14px; border-radius: var(--radius); font-size: 12.5px; cursor: pointer; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; border: 1px solid var(--coral); }
+
+.counts-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.count-chip {
+  font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 11.5px; padding: 5px 10px;
+  background: white; border: 1px solid var(--line); border-radius: 2px; color: var(--ink-soft);
+}
+.count-chip b { color: var(--ink); }
+
+table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--line); }
+th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 500; background: var(--sand-dim); }
+tr:last-child td { border-bottom: none; }
+tr.data-row:hover { background: #FBFAF6; }
+
+td.title-cell { max-width: 340px; }
+.title-link {
+  background: none; border: none; padding: 0; text-align: left; cursor: pointer;
+  font-size: 15px; font-weight: 600; color: #0D5C5C; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif;
+  display: block;
+}
+.title-link:hover { text-decoration: underline; }
+.provider-name { display: block; font-size: 14px; font-weight: 600; color: var(--provider); margin-top: 3px; }
+
+td.deadline { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 12.5px; white-space: nowrap; }
+.badge { display: inline-block; font-size: 13px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; }
+.badge.passed { color: var(--dark-blue); font-style: italic; font-weight: 400; }
+.badge.soon { color: #000; font-weight: 700; font-style: normal; }
+.badge.rolling { color: #000; font-weight: 400; font-style: normal; }
+.badge.none { color: var(--ink-soft); font-weight: 400; }
+
+.outcome-text { font-size: 13px; color: var(--ink); }
+.outcome-text.verdict-apply { color: var(--strong); font-weight: 600; }
+.outcome-text.verdict-pass { color: var(--weak); }
+.outcome-text.verdict-park { color: var(--gold); font-weight: 600; }
+
+.align { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 11px; }
+.align.strong { color: var(--strong); }
+.align.partial { color: var(--partial); }
+.align.weak { color: var(--weak); }
+
+.empty { text-align: center; padding: 60px 20px; color: var(--ink-soft); background: white; border: 1px solid var(--line); }
+.empty .glyph { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-style: italic; font-size: 20px; color: var(--sea-mid); margin-bottom: 8px; display:block; }
+
+/* Add / assess page */
+.page-header { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+.back-link { background: none; border: none; color: var(--sea-mid); font-size: 13px; cursor: pointer; padding: 4px 0; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; }
+.back-link:hover { text-decoration: underline; }
+
+.form-panel { background: white; border: 1px solid var(--line); padding: 24px 28px; max-width: 720px; }
+label { display: block; font-size: 12px; font-weight: 700; color: var(--ink); margin: 16px 0 5px 0; text-transform: uppercase; letter-spacing: 0.04em; }
+label:first-child { margin-top: 0; }
+input[type=text], input[type=url], textarea, select.form-select {
+  width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 2px;
+  font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 14px; background: white; color: var(--ink);
+}
+textarea { min-height: 120px; resize: vertical; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; }
+.hint { color: var(--ink-soft); font-size: 12.5px; margin: 4px 0 0 0; }
+
+.stage-status { margin: 20px 0; padding: 12px 14px; border-radius: 2px; font-size: 13px; border: 1px solid var(--line); background: white; display: none; }
+.stage-status.visible { display: block; }
+.stage-status.working { color: var(--sea-mid); }
+.stage-status.error { color: var(--weak); }
+.stage-status.done { color: var(--strong); }
+
+.assessment-block { max-width: 820px; margin-top: 24px; display: none; }
+.assessment-block.visible { display: block; }
+.stage-card { background: white; border: 1px solid var(--line); padding: 20px 22px; margin-bottom: 14px; }
+.stage-card h4 { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight: 600; font-size: 15px; margin: 0 0 12px 0; color: var(--sea-deep); }
+.stage-card table { border: none; }
+.stage-card th, .stage-card td { padding: 7px 8px; font-size: 13px; }
+.stage-card th { background: var(--sand-dim); }
+.met-yes { color: var(--strong); font-weight: 600; }
+.met-no { color: var(--weak); font-weight: 600; }
+.met-unclear { color: var(--gold); font-weight: 600; }
+.verdict-banner {
+  padding: 18px 22px; border-radius: 2px; margin-bottom: 14px; display: flex; align-items: center; justify-content: space-between; gap: 14px;
+}
+.verdict-banner.verdict-apply { background: #E8F2EF; border: 1px solid var(--strong); }
+.verdict-banner.verdict-pass { background: #F7EAE5; border: 1px solid var(--weak); }
+.verdict-banner.verdict-park { background: #F7F0DE; border: 1px solid var(--gold); }
+.verdict-banner .verdict-label { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight: 600; font-size: 22px; }
+.verdict-banner.verdict-apply .verdict-label { color: var(--strong); }
+.verdict-banner.verdict-pass .verdict-label { color: var(--weak); }
+.verdict-banner.verdict-park .verdict-label { color: var(--gold); }
+ul.plain { margin: 0; padding-left: 18px; }
+ul.plain li { margin-bottom: 5px; }
+.form-actions { display: flex; gap: 10px; margin-top: 20px; max-width: 820px; }
+
+/* Detail page */
+.detail-header { margin-bottom: 22px; }
+.detail-title { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight: 600; font-size: 26px; color: #0D5C5C; margin: 0 0 6px 0; }
+.detail-provider { font-size: 19px; font-weight: 600; color: var(--provider); margin: 0 0 14px 0; }
+.detail-grid { display: grid; grid-template-columns: 1fr; gap: 0; background: white; border: 1px solid var(--line); margin-bottom: 20px; }
+.detail-field { padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.detail-field .k { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink); margin-bottom: 5px; }
+.detail-field .v { font-size: 14px; }
+.detail-field .v.mono { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 13px; }
+.outcome-row { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.outcome-row label { margin: 0; }
+select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 2px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 13.5px; }
+
+@media (max-width: 640px) {
+  header { padding: 22px 16px 0 16px; }
+  .subtitle { white-space: normal; }
+  main { padding: 16px 12px 60px 12px; }
+  nav.tabs { padding: 0 12px; overflow-x: auto; }
+  table, thead, tbody, th, td, tr { display: block; }
+  thead { display: none; }
+  tr.data-row { border-bottom: 1px solid var(--line); padding: 12px 0; }
+  td { border: none; padding: 3px 0; }
+  .detail-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Opportunity Log</h1>
+  <div class="subtitle">Grants, fellowships, consultancies and every other call worth tracking, assessed on entry and sorted by deadline.</div>
+</header>
+
+<nav class="tabs" id="tabs"></nav>
+
+<main id="app">
+
+  <div id="view-dashboard">
+    <div class="toolbar">
+      <h2 id="tab-heading">Grants &amp; Fellowships</h2>
+      <div style="display:flex; gap:10px;">
+        <button class="ghost" id="csv-btn">Download CSV</button>
+        <button class="ghost" id="snapshot-btn">Download standalone copy</button>
+        <button class="primary" id="add-btn">+ Log opportunity</button>
+      </div>
+    </div>
+    <div class="counts-bar" id="counts-bar"></div>
+    <table id="table">
+      <thead><tr id="table-head-row"></tr></thead>
+      <tbody id="table-body"></tbody>
+    </table>
+    <div class="empty" id="empty-state" style="display:none">
+      <span class="glyph">nothing logged yet</span>
+      Log the first opportunity in this category.
+    </div>
+  </div>
+
+  <div id="view-add" style="display:none">
+    <div class="page-header">
+      <button class="back-link" id="back-from-add">&larr; Back to dashboard</button>
+    </div>
+    <div class="form-panel">
+      <label>Insert URL</label>
+      <input type="url" id="input-url" placeholder="https://..." />
+
+      <label>Or Details (paste description, eligibility, deadline, funding, whatever's on the page)</label>
+      <textarea id="input-snippet" placeholder="Paste the call text here..."></textarea>
+      <p class="hint">The assessment is only as good as what's pasted here. If left blank, the model will try a web search on the URL, but that finds pages by keyword match, not by fetching the exact page.</p>
+
+      <label>Or upload a PDF or Word document</label>
+      <input type="file" id="input-file" accept=".pdf,.docx" />
+      <p class="hint">Text is extracted in your browser and added to the details field above. This is plain text extraction, not a formatted markdown conversion, tables and headings won't carry over cleanly. Scanned/image PDFs won't extract at all, paste that text manually instead.</p>
+      <div class="stage-status" id="file-status"></div>
+
+      <label>Category</label>
+      <select class="form-select" id="input-category"></select>
+    </div>
+    <div class="form-actions">
+      <button class="primary" id="assess-btn">Run assessment</button>
+    </div>
+
+    <div class="stage-status" id="assess-status"></div>
+    <div class="assessment-block" id="assessment-block"></div>
+  </div>
+
+  <div id="view-detail" style="display:none"></div>
+
+</main>
+
+<script>
+const SEED = [{"id": "seed-1", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Blue and Green Islands Integrated Programme (BGI-IP) GEF Programme", "implementor": "UNDP/GEF", "deadline": "Active Project", "date_applied": "N/A", "outcome": "Apply", "fund_size_original": "$135,600,000", "fund_size_scr": "Unknown", "duration": "Multi-year", "description": "GEF-funded nature-positive development in food/tourism/urban sectors for SIDS.", "url": "https://www.undp.org/nature/press-releases/1356-million-blue-and-green-islands-integrated-programme-will-transform-islands-valui", "action": "Drafting", "status": "Not Pursued"}}, {"id": "seed-2", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Vital Voices Global Fellowship", "implementor": "Vital Voices Global", "deadline": "4/15/2025", "date_applied": "4/11/2025", "outcome": "Apply", "fund_size_original": "Fully funded", "fund_size_scr": "Unknown", "duration": "10 months", "description": "Leadership program for women in social entrepreneurship/public leadership; applied to build ocean governance networks.", "url": "https://opportunitydesk.org/2025/03/21/vital-voices-global-fellowship-2025/", "action": "Submitted", "status": "Not Succesful"}}, {"id": "seed-3", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "HARMONiSE (UN Ocean Decade Call No.10)", "implementor": "UN Ocean Decade", "deadline": "1/31/2026", "date_applied": "1/31/2026", "outcome": "Apply", "fund_size_original": "No funding", "fund_size_scr": "No Funding", "duration": "Multi-year", "description": "UN Ocean Decade endorsed project submission for HARMONiSE.", "url": "https://oceandecade.org/call-for-decade-actions-10-2025/", "action": "Submitted", "status": "Successful"}}, {"id": "seed-4", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "WILD Network Global Leaders Program", "implementor": "WILD Network", "deadline": "3/31/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Complimentary forum pass (valued at USD 595)", "fund_size_scr": "SCR 8,449 (at 1 USD = 14.20 SCR)", "duration": "5 months (April to August 2026)", "description": "A scholarship programme for early-, mid-, and senior-career professional women working in global development, humanitarian assistance, and other purpose-driven fields. Fellows receive a complimentary pass to the online 2026 Leadership for Social Impact Forum plus five months of leadership development activities including masterclasses, MentorMatch, and community events.", "url": "https://www.wildleadershipforum.com/2026wildfellow", "action": "Submitted", "status": "Successful"}}, {"id": "seed-5", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Ocean Community Challenge 2026", "implementor": "Ocean Community", "deadline": "3/31/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD10,500 total prize pool", "fund_size_scr": "Approx. SCR 144,375", "duration": "4 mths (from Oct 2026)", "description": "Global innovation challenge for ocean-positive solutions that support a healthy ocean and sustainable blue economy.", "url": "https://www.oceancommunitychallenge.com/oc-challenge", "action": null, "status": "Missed Deadline"}}, {"id": "seed-6", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OSV Fellowships & Grants", "implementor": "O'Shaunessy Foundation", "deadline": "5/30/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD100,000", "fund_size_scr": "SCR 1,375,000", "duration": "12 months", "description": "Non-dilutive funding targeting builders in ocean research and SIDS blue economy.", "url": "https://www.globalsouthopportunities.com/2026/01/02/fellowships-9/", "action": "Deferred (Later Cycle)", "status": "Not Pursued"}}, {"id": "seed-7", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "DRK Foundation", "implementor": "Draper Richards Kaplan Foundation", "deadline": "Rolling", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD300,000", "fund_size_scr": "SCR 4,125,000", "duration": "3 years", "description": "Early-stage social enterprise funding.", "url": "https://www.drkfoundation.org/apply-for-funding/what-we-fund/", "action": "Deferred (Later Cycle)", "status": "Expired"}}, {"id": "seed-8", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Belmont Forum - CRA Ocean 2", "implementor": "Belmont Forum", "deadline": "4/30/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Unknown", "fund_size_scr": "Unknown", "duration": "36 months", "description": "Multinational, transdisciplinary research teams working on ocean biodiversity, nature-based solutions, ocean-biodiversity-climate integration, and ocean governance and ethics, as a formal contribution to the UN Ocean Decade.", "url": "https://belmontforum.org/archives/open-opportunity/ocean-2/", "action": "Drafting", "status": "Expired"}}, {"id": "seed-9", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Utrecht University Critical Pathways Fellowship 2026", "implementor": "Utrecht University / Towards a Circular Economy and Society", "deadline": "4/27/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "EUR10,000", "fund_size_scr": "SCR 149,500", "duration": "4-6 weeks (Oct-Nov 2026)", "description": "Fully funded short residential fellowship at Utrecht University. 2026 theme: Making Visible the Invisible. Explore hidden systems driving ecological breakdown and social inequality. Strong alignment: ocean data injustice in SIDS; hydrospatial governance gaps; High-Income SIDS Paradox. Dossier and Stage 4 assessment complete.", "url": "https://www.uu.nl/en/news/making-visible-the-invisible-critical-pathways-fellowships-2026", "action": "Drafting", "status": "Expired"}}, {"id": "seed-10", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OPERA Consortium Grant (26487-GRANT-OPERA-OOFS)", "implementor": "Mercator Ocean", "deadline": "6/5/2026", "date_applied": null, "outcome": "Park", "fund_size_original": "USD800,000", "fund_size_scr": "SCR 13,600,000", "duration": "40 months", "description": "Formation and management of a Consortium of sub-Saharan African institutions for the codesign, installation, and operation of Ocean forecasting systems in the framework of the OPERA project.", "url": "https://www.mercator-ocean.eu/tender/151/", "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-11", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainable Blue Economy Partnership Joint Transnational Call 3", "implementor": "EU", "deadline": "6/17/2026", "date_applied": null, "outcome": "Park", "fund_size_original": "EUR 4,350,000", "fund_size_scr": "SCR740M", "duration": "36 months", "description": "EU-funded R&I for blue bioresources, climate-smart sea-use planning - form consortium as SIDS lead for multi-use marine infrastructures.", "url": "https://www.bluepartnership.eu/funding-opportunity/sustainable-blue-economy-partnerships-third-joint-transnational-call", "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-12", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OceanX Ocean Futures Fellowship 2026", "implementor": "OceanX / Institute of International Education (IIE)", "deadline": "5/3/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Monthly stipend x 6 months (amount undisclosed) + technology stipend on case-by-case basis", "fund_size_scr": "Not calculable \u2014 stipend amount not publicly disclosed", "duration": "6 months full-time remote (June-December 2026)", "description": "Six-month full-time remote fellowship administered by IIE on behalf of OceanX, open to early-career ocean professionals aged 21+. Francesca is applying for the Partnerships track, supporting relationships that advance ocean health.", "url": "https://www.iie.org/programs/oceanfuturesfellowship/", "action": "Drafting", "status": "Expired"}}, {"id": "seed-13", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Critical Pathways Autumn Fellowship 2026 \u2014 Making Visible the Invisible", "implementor": "Utrecht University (Critical Pathways community & Towards a Circular Economy and Society initiative)", "deadline": "4/27/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "EUR 10,000", "fund_size_scr": "\u20a8173,200 (at \u20ac1 = \u20a817.32, XE mid-market, 22 April 2026)", "duration": "4-6 weeks residential residency, October-November 2026", "description": "Short-term research residency at Utrecht University for the 2026 theme \"Making Visible the Invisible.\" Funds travel, accommodation, visa, and research materials up to \u20ac10,000. Relevant through the framing of ocean data as an extractive resource and hydrospatial infrastructure as a knowledge commons model.", "url": "https://www.uu.nl/en/news/making-visible-the-invisible-critical-pathways-fellowships-2026", "action": "Drafting", "status": "Expired"}}, {"id": "seed-14", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Mira Fellowship", "implementor": "The Mira Fellowship", "deadline": "1-Jun-26", "date_applied": "\u2014", "outcome": "Apply", "fund_size_original": "Unspecified (micro-grants only; no stipend)", "fund_size_scr": "N/A", "duration": "Ongoing; annual Cohort Sprint", "description": "A global fellowship for mid-career innovators pursuing systems-level change, open worldwide. Fellows receive 1:1 coaching, peer community access, micro-grants, and introductions to donors and investors. Relevant to SHORE as a vehicle for project development support, fundraising readiness, and network access for HARMONiSE.", "url": "https://www.mirafellowship.org/fellowship", "action": null, "status": "To Apply"}}, {"id": "seed-15", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Hydrospatial Literacy Platform (ETF Cycle 1, Proposal B)", "implementor": "SeyCCAT / Environment Trust Fund", "deadline": "27-May-26", "date_applied": "46169", "outcome": "Apply", "fund_size_original": "SCR 100,000 (max)", "fund_size_scr": "SCR 100,000", "duration": "12 months", "description": "Education and Awareness category. Custom-built open-access hydrospatial literacy platform for Seychelles marine sector practitioners and students. Submitted 27 May 2026, awaiting outcome.", "url": null, "action": "Submitted", "status": "Pending"}}, {"id": "seed-16", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "In Development Magazine \u2014 Call for Pitches", "implementor": "In Development Magazine", "deadline": "1-Jul-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 2,000", "fund_size_scr": "SCR 29,400 (approx.)", "duration": "2,000-4,000 word commissioned essay", "description": "Pitch drafted around the High-Income SIDS Paradox, Seychelles as case study, framed as borrowed ocean data infrastructure.", "url": "https://indevelopmentmag.substack.com/p/call-for-pitches", "action": "Drafting", "status": "Pending"}}, {"id": "seed-17", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Knowledge Frontiers: International Interdisciplinary Research Projects 2026", "implementor": "The British Academy (UK)", "deadline": "~Sep 2026 (TBC, call opens June 2026)", "date_applied": null, "outcome": "Pass (Not Eligible)", "fund_size_original": "GBP 300,000", "fund_size_scr": "SCR 5,628,000 (at GBP 1 = SCR 18.76, 23 Apr 2026)", "duration": "24 months", "description": "UK-led HSS interdisciplinary scheme; Francesca as international Co-Applicant contributing SHORE hydrospatial data governance and SIDS equity case. Blocked: no UK PI identified yet, a hard requirement before further work is worthwhile.", "url": "https://www.thebritishacademy.ac.uk/funding/schemes/knowledge-frontiers-international-interdisciplinary-research/", "action": "Withdrawn", "status": "Not Pursued"}}, {"id": "seed-18", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Green Institute Sustainability Impact Grant \u2014 Round 2", "implementor": "Green Institute", "deadline": "8-Sep-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 5,000", "fund_size_scr": "SCR 69,065 (at 1 USD = 13.813 SCR)", "duration": "Project-based", "description": "Desktop geospatial study prioritising deep-sea habitat features (seamounts, hydrothermal vents, abyssal plains) in the Seychelles EEZ using public bathymetric data. Originally scoped against GOIPG PhD independence constraints; that premise no longer holds after the GOIPG withdrawal, rationale needs re-checking before submission. Target submission mid-August 2026.", "url": null, "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-19", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Mo Ibrahim Foundation Academy Fellowship (Chatham House)", "implementor": "Chatham House / Queen Elizabeth II Academy", "deadline": "7-Apr-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "GBP 2,565/month stipend + travel, relocation, visa costs", "fund_size_scr": "Not calculated", "duration": "10 months, Oct 2026 start", "description": "Fully funded global policy fellowship, London-based. African-citizen track identified as best fit; proposed angle was hydrospatial data governance for climate resilience in African SIDS. No application proceeded past initial scoping.", "url": "https://careers.chathamhouse.org/jobs/7401384-2026-2027-chatham-house-academy-fellowships", "action": null, "status": "Missed Deadline"}}, {"id": "seed-20", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "ESA African Research Fellowship (ARF) 2026", "implementor": "European Space Agency / EO AFRICA", "deadline": "29-Apr-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "1 year, ESRIN Frascati, Oct 2026 start", "description": "Earth Observation fellowship for African researchers using satellite EO data. Eligibility flagged as needing verification against thematic priority areas; never progressed past Stage 0 shortlist.", "url": "https://eo4society.esa.int/2026/03/18/african-research-fellowships-call-2026/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-21", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Global Fishing Watch Open Ocean Research Grant 2026", "implementor": "Global Fishing Watch", "deadline": "LOI: 10 May 2026", "date_applied": null, "outcome": "Pass", "fund_size_original": "USD 20,000 (team) / USD 10,000 (individual)", "fund_size_scr": "SCR 292,400 (team, at 1 USD = SCR 14.62, 19 Apr 2026)", "duration": "Cohort Nov 2026-2028", "description": "Full Stage 1-4 assessment completed. Moderate alignment on ocean governance and MSP, but weak on GFW's core domain of vessel monitoring and fishing effort analysis. Decided not to apply.", "url": "https://globalfishingwatch.org/open-ocean-research-grants-program/", "action": "Withdrawn", "status": "Not Pursued"}}, {"id": "seed-22", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Elevate Prize 2027", "implementor": "Elevate Prize Foundation", "deadline": "Nominations: 8 May 2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 300,000 unrestricted + 2-year support programme", "fund_size_scr": "Not calculated", "duration": "Nomination-based, 2-year programme", "description": "Nomination-based award for social impact leaders driving systemic change. Programme typically targets orgs with USD 2-10M budgets, fit at SHORE's current scale uncertain. Never advanced past Stage 0 shortlist.", "url": "https://elevateprize.org/the-elevate-prize/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-23", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Save Our Seas Foundation Keystone Grant", "implementor": "Save Our Seas Foundation", "deadline": "13-May-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not specified publicly", "fund_size_scr": "Not calculated", "duration": "Not specified", "description": "Conservation grant focused narrowly on threatened marine megafauna (sharks, rays, skates). Weak thematic fit with SHORE flagged at Stage 0; never advanced.", "url": "https://saveourseas.com/grants/funding-applications/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-24", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IUCN Island Plas Accelerator", "implementor": "IUCN", "deadline": "1/30/2026", "date_applied": "2/11/2026", "outcome": "Apply", "fund_size_original": "Part of USD10,000,000", "fund_size_scr": "Unknown", "duration": "Project-based", "description": null, "url": "https://www.linkedin.com/posts/the-great-blue-wall_deadline-extended-the-deadline-for-the-activity-7418939964274429952-3tyO", "action": "Submitted", "status": "Pending"}}, {"id": "seed-25", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IOC UNESCO Consultancy", "implementor": "UNESCO Ocean", "deadline": "2/11/2026", "date_applied": "2/11/2026", "outcome": "Apply", "fund_size_original": "USD33,000", "fund_size_scr": "SCR491,870", "duration": "110 days", "description": "Individual consultant for actions management/monitoring.", "url": null, "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-26", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IPOS AKC", "implementor": "IPOS", "deadline": "3/22/2026", "date_applied": "3/16/2026", "outcome": "Apply", "fund_size_original": "USD 500/day", "fund_size_scr": "SCR 6,875/day", "duration": "1 year", "description": "Science-policy interface role with meetings/reviews.", "url": "https://blog.wiomsa.net/wp-content/uploads/2026/03/Call-For-New-AKC-members.pdf", "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-27", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "WIO-MCEN Coordinator \u2014 Support the Structuring and Coordination of a Regional Marine and Coastal Education Network", "implementor": "Indian Ocean Commission (IOC) / RECOS Project (AFD + FFEM)", "deadline": "23 June 2026, 16:00 Mauritius time", "date_applied": null, "outcome": "Park", "fund_size_original": "Not disclosed (EOI stage)", "fund_size_scr": "N/A", "duration": "Not specified (EOI stage)", "description": "EOI for individual consultant to coordinate WIO-MCEN regional network. French and English professional proficiency mandatory (confirmed met). EOI fully drafted, decision pending given gaps in network facilitation framing and resources mobilisation evidence.", "url": null, "action": null, "status": "Not Pursued"}}, {"id": "seed-28", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "GEBCO Policy Officer (CL30/2026)", "implementor": "IHO / GEBCO Secretariat, Monaco", "deadline": "7/31/2026", "date_applied": null, "outcome": "Pass (Not Eligible)", "fund_size_original": "P-3, ICSC framework + Monaco post adjustment (figure not published)", "fund_size_scr": "Not calculable", "duration": "3 years FTA, extension possible", "description": "P-3 policy officer role co-located with IHO Secretariat. Blocked: role lists advanced degree requirement, Francesca holds a bachelor's only. Email sent to Samuel Harper (IHO) to clarify whether this is a hard administrative filter or committee discretion; answer needed well before the deadline.", "url": "https://iho.int", "action": null, "status": "To Apply - blocked"}}, {"id": "seed-29", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Consultant: Digital Sovereignty & Alternative Technologies (DDI)", "implementor": "CIVICUS / Digital Democracy Initiative", "deadline": "4/26/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "Consultancy, 40-60pp research report", "description": "Assessment stalled at Stage 3. Partial fit: civic tech / open-source platform governance experience not a documented specialism against hydrospatial data governance background. No application proceeded.", "url": "https://civicus.org/index.php/component/content/article/8199-research-consultant-digital-sovereignty-alternative-technologies", "action": null, "status": "Missed Deadline"}}, {"id": "seed-30", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Officer", "implementor": "Southern Voice", "deadline": "5/8/2026", "date_applied": null, "outcome": "Pass", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "Through Dec 2026, possibly into 2027", "description": "Cover letter drafted and reached strong final version. Declined to apply once the contract period was identified as directly conflicting with the planned September MSc start. Decision made on reputational and commitment grounds.", "url": null, "action": null, "status": "Not Pursuing"}}, {"id": "seed-31", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Intern", "implementor": "CIVICUS", "deadline": "5/18/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not stated", "fund_size_scr": "Not calculated", "duration": "Part-time, start 1 Jul 2026", "description": "Full cover note drafted and finalised same day as the deadline. No compensation figure was ever published or confirmed. No record of final submission.", "url": "https://civicus.bamboohr.com/careers/78", "action": "Drafting", "status": "Not Pursued"}}, {"id": "seed-32", "category": "Scholarships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "SWDTP Human Geography PhD", "implementor": "University of Plymouth", "deadline": "1/9/2026", "date_applied": "12/15/2025", "outcome": "Apply", "fund_size_original": "Tuition + stipend", "fund_size_scr": "Unknown", "duration": "3-4 years", "description": "Funded PhD in Human Geography focused on hydrospatial science; prepared personal statement and proposal.", "url": "https://www.bristol.ac.uk/geography/courses/postgraduate/humanphd.html", "action": "Submitted", "status": "Not Succesful"}}, {"id": "seed-33", "category": "Scholarships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "SIDS Water Scholarships MSc", "implementor": null, "deadline": "6/1/2026", "date_applied": null, "outcome": null, "fund_size_original": "Fully funded", "fund_size_scr": "Unknown", "duration": "2 years", "description": "Fully funded postgraduate for SIDS professionals; complements PhD pursuits in marine/hydrospatial science.", "url": "https://opportunitiesforyouth.org/2026/03/02/sids-water-scholarships/", "action": "Declined to Pursue (Outcome - Apply)", "status": "Expired"}}, {"id": "seed-34", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Master in Global Studies (EMGS)", "location": "Erasmus Mundus", "deadline": "15th March", "funding": "All tuition fees and as well as a living allowance of \u20ac1,400 per month", "outcome": null, "url": "https://globalstudies-masters.eu/"}}, {"id": "seed-35", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Joint Master in Global Environment and Development", "location": null, "deadline": null, "funding": null, "outcome": null, "url": "https://merged.info/"}}, {"id": "seed-36", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Joint Master in Global Change Ecology and Biodiversity Management", "location": null, "deadline": "Oct - Dec 2025", "funding": "Full 24-month duration of the programme as well as a monthly stipend of 1,400\u20ac", "outcome": null, "url": "https://globe-master.eu/"}}, {"id": "seed-37", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Executive MSc & MSc in Innovation and Entrepreneurship", "location": "HEC Paris", "deadline": null, "funding": "Euro 22,950-24,950 = SCR381,200 - SCR 414,550. Program deposit EUR 5,000 (due within 7 days); 1st installment EUR 6,650 (due 3 months); 2nd installment EUR 6,650 (due 6 months); 3rd installment EUR 6,650 (due 9 months)", "outcome": null, "url": "https://www.coursera.org/degrees/omie"}}, {"id": "seed-38", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Innovation Management & Entrepreneurship University Certificate (credit towards the Executive MSc)", "location": "HEC Paris", "deadline": null, "funding": "EUR4000 = SCR66500", "outcome": null, "url": "https://www.coursera.org/certificates/innovation-management-entrepreneurship-hec"}}, {"id": "seed-39", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Leading Innovation With Creativity University Certificate (credit towards the Executive MSc)", "location": "HEC Paris", "deadline": null, "funding": "EUR4000 = SCR66500", "outcome": null, "url": "https://www.coursera.org/certificates/leading-innovation-with-creativity-hec"}}, {"id": "seed-40", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "Utrecht University", "title": "PhD Position: Living Decent Lives within Safe and Just Planetary Boundaries", "url": "https://www.uu.nl/en/organisation/working-at-utrecht-university/jobs/phd-position-living-decent-lives-within-safe-and-just-planetary-boundaries", "deadline": "20-Apr-25", "fee": "Full Scholarship", "outcome": "Apply", "action": "Submitted", "status": "Applied Not Successful"}}, {"id": "seed-41", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": null, "title": "PhD Position: Transition towards Circular Societies", "url": "https://www.uu.nl/en/organisation/working-at-utrecht-university/jobs/phd-position-transition-towards-circular-societies", "deadline": "11-May-25", "fee": "Full Scholarship", "outcome": "Apply", "action": null, "status": "Missed"}}, {"id": "seed-42", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Malta", "title": "Doctor of Philosophy (Island & Small States)", "url": "https://www.um.edu.mt/issi/", "deadline": "2-Jul-25", "fee": "Full-time - EUR11,000 / Part-time - EUR5500", "outcome": null, "action": null, "status": "Pending"}}, {"id": "seed-43", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Essex", "title": "PhD Accounting", "url": "https://www.essex.ac.uk/scholarships/sustainable-transitions---governance-ecological-management-and-society", "deadline": "28-May-25", "fee": "Living costs stipend of \u00a320,780 + a research allowance of \u00a310,000", "outcome": "Pass (Not Eligible)", "action": null, "status": "Only for Home-Fee Student"}}, {"id": "seed-44", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Wollongong", "title": "University Postgraduate Awards (UPAs) 2025 \u2014 PhD (Geography and Sustainable Communities)", "url": "https://www.uow.edu.au/research/graduate-research/scholarships/items/university-postgraduate-award-upa.php", "deadline": "International Applications: May 23, 2025 / Domestic Applications: October 3, 2025", "fee": "$35,522 AUD per annum (tax-free)", "outcome": null, "action": null, "status": "Pending"}}, {"id": "seed-45", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "UNU-IAS", "title": "Doctor of Philosophy in Sustainability Science", "url": "https://phd.unu.edu", "deadline": "19th February", "fee": "USD 12,000 per year", "outcome": "Park", "action": null, "status": "For 2026"}}, {"id": "seed-46", "category": "Internship", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "INTERSECT Internship", "url": "https://www.iaruni.org/university-of-copenhagen-intersect-internship", "deadline": "15-May-25", "funding": "$3000/Monthly", "outcome": "Apply", "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-47", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainability Leadership Capabilities for the 21st Century", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "21-22 October 2024", "outcome": null, "format": "In person", "fee": "\u00a32,750", "cost_scr": "SCR 47,410.00", "travel_cost": "SCR 25,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 72,410.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-48", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Systems Thinking for Complex Sustainability Challenges", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "10-11 March 2025", "outcome": null, "format": "In person", "fee": "\u00a32,750", "cost_scr": "SCR 47,410.00", "travel_cost": "SCR 25,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 72,410.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-49", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainability Practitioners Programme (SPP)", "location": "Melbourne, Australia", "deadline": null, "date_applied": null, "duration": "3-5 March 2025", "outcome": null, "format": "In person", "fee": "AUD 5,950", "cost_scr": "SCR 52,657.50", "travel_cost": "SCR 40,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 92,657.50", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-50", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "The Prince of Wales's Business & Sustainability Programme (BSP)", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "27-30 April 2025", "outcome": null, "format": "In person", "fee": "\u00a34,750", "cost_scr": "SCR 81,890.00", "travel_cost": "SCR 20,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 101,890.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-51", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Business & Sustainability Programme (BSP) Africa", "location": "Nevisha, Kenya", "deadline": null, "date_applied": null, "duration": "16-19 March 2025", "outcome": "Apply", "format": "In person", "fee": "$3,500", "cost_scr": "SCR 46,760.00", "travel_cost": "SCR 15,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 61,760.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": "Submitted", "status": "Attended"}}, {"id": "seed-52", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Leading Sustainability: High Impact Leadership", "location": "Online", "deadline": null, "date_applied": null, "duration": "9-Oct-24", "outcome": null, "format": "Online", "fee": "$2,113", "cost_scr": "SCR 28,229.68", "travel_cost": "SCR 0.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 28,229.68", "remarks": "The course fee includes Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-53", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Grant Writing and Funding (GWF) Program 2026", "location": "Leaders of Africa Institute", "deadline": "3/6/2026", "date_applied": "3/4/2026", "duration": "3 months", "outcome": "Apply", "format": "Online", "fee": "$300", "cost_scr": "SCR 4,008.00", "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Virtual program with certificate and grant support for research/funding applications in ocean data equity.", "url": "https://www.linkedin.com/posts/leadersafrica_grants-funding-research-activity-7424706852459999232-vYRR", "action": "Declined to Pursue (Outcome - Apply)", "status": "Successful"}}, {"id": "seed-54", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Methods Program 2026", "location": "Leaders of Africa Institute", "deadline": null, "date_applied": null, "duration": null, "outcome": null, "format": null, "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": null, "url": null, "action": null, "status": "Pending"}}, {"id": "seed-55", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "2026 Accessing the Deep", "location": "Ocean Discovery League", "deadline": "3/8/2026", "date_applied": "3/5/2026", "duration": "4 months", "outcome": "Apply", "format": "Online", "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Capacity building for deep-sea exploration using low-cost methods (>200m depths), targeting Africa/Western Indian Ocean professionals.", "url": "https://www.oceandiscoveryleague.org/capacity-and-community-building/accessing-the-deep-2026", "action": "Submitted", "status": "Successful"}}, {"id": "seed-56", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Global Sustainable Tourism Conference 2025", "location": "Fiji", "duration": "5 - 8 August 2025", "description": "Coastal and Island Tourism Community, Culture, and Responsible Development; Climate Resilience, Adaption, and Sustainable Recovery", "abstract_deadline": "5/5/2025", "abstract_title": "Integrating Sustainability in Luxury Hospitality: The Raffles Seychelles Case Study", "program": "Tuesday 5 Aug: Academic Symposium, Pre-Conference Meetings, Welcome Dinner. Wed-Thu 6-7 Aug: Conference days. Fri 8 Aug: Post-conference tour.", "outcome": null, "format": "In person", "fee": "$480", "cost_scr": "SCR 6,403.20", "travel_cost": "SCR 50,000.00", "accommodation_cost": "SCR 7,500.00", "total_cost": "SCR 63,903.20", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-57", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "11th World Sustainability Forum", "location": "Barcelona, Spain", "duration": "2-3 October 2025", "description": "Sustainable and Resilient Cities", "abstract_deadline": "6/18/2025", "abstract_title": null, "program": null, "outcome": null, "format": "In person", "fee": "EUR 370", "cost_scr": "SCR 6,068.00", "travel_cost": "SCR 16,500.00", "accommodation_cost": "SCR 25,250.00", "total_cost": "SCR 47,818.00", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-58", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "12th World Sustainability Forum", "location": null, "duration": null, "description": null, "abstract_deadline": null, "abstract_title": null, "program": null, "outcome": null, "format": "In person", "fee": "EUR 370", "cost_scr": "SCR 6,068.00", "travel_cost": "SCR 16,500.00", "accommodation_cost": "SCR 25,250.00", "total_cost": "SCR 47,818.00", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-59", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Seabed 2030 Symposium", "location": "Cartagena, Colombia", "duration": "8-9 October 2026", "description": "Seabed mapping, GEBCO network visibility", "abstract_deadline": null, "abstract_title": null, "program": null, "outcome": null, "format": null, "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Open call, contributions due 26 June 2026. Flagged as low-cost way to build GEBCO network visibility ahead of the GEBCO/Nippon training cycle.", "url": null}}];
+const CATEGORY_SCHEMAS = {"Grants & Fellowships": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Fund Size (Original)"], ["fund_size_scr", "Fund Size (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Fund Size"]}, "Consultancies & Jobs": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Amount (Original)"], ["fund_size_scr", "Amount (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Amount"]}, "Scholarships": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Fund Size (Original)"], ["fund_size_scr", "Fund Size (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Fund Size"]}, "Masters": {"titleKey": "title", "titleLabel": "Course Name", "orgKey": "location", "deadlineKey": "deadline", "fields": [["title", "Course Name"], ["location", "Location"], ["deadline", "Deadline"], ["funding", "Funding"], ["outcome", "Outcome"], ["url", "URL"]], "dashboardExtra": ["funding", "Funding"]}, "PhD": {"titleKey": "title", "titleLabel": "Name", "orgKey": "location", "deadlineKey": "deadline", "fields": [["location", "Location"], ["title", "Name"], ["url", "URL"], ["deadline", "Deadline"], ["fee", "Fee (Annual)"], ["outcome", "Outcome"]], "dashboardExtra": ["fee", "Fee"]}, "Jobs": {"titleKey": "title", "titleLabel": "Job Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Job Title"], ["implementor", "Organisation"], ["location", "Location"], ["deadline", "Application Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["contract_type", "Contract Type"], ["duration", "Duration / Contract Length"], ["salary_original", "Salary (Original)"], ["salary_scr", "Salary (SCR)"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["contract_type", "Contract Type"]}, "Internship": {"titleKey": "title", "titleLabel": "Name", "orgKey": null, "deadlineKey": "deadline", "fields": [["title", "Name"], ["url", "URL"], ["deadline", "Deadline"], ["funding", "Funding Available"], ["outcome", "Outcome"]], "dashboardExtra": ["funding", "Funding"]}, "Trainings": {"titleKey": "title", "titleLabel": "Name of Training", "orgKey": "location", "deadlineKey": "deadline", "fields": [["title", "Name of Training"], ["location", "Location"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["duration", "Length"], ["outcome", "Outcome"], ["format", "Format"], ["fee", "Fee"], ["cost_scr", "Cost (SCR)"], ["travel_cost", "Travel"], ["accommodation_cost", "Accommodation"], ["total_cost", "Total"], ["remarks", "Remarks"], ["url", "URL"]], "dashboardExtra": ["total_cost", "Total Cost"]}, "Conferences": {"titleKey": "title", "titleLabel": "Name of Conference", "orgKey": "location", "deadlineKey": "abstract_deadline", "fields": [["title", "Name of Conference"], ["location", "Location"], ["duration", "Dates"], ["description", "Theme(s)"], ["abstract_deadline", "Abstract Deadline"], ["abstract_title", "Abstract Title"], ["program", "Program"], ["outcome", "Outcome"], ["format", "Format"], ["fee", "Fee"], ["cost_scr", "Cost (SCR)"], ["travel_cost", "Travel"], ["accommodation_cost", "Accommodation"], ["total_cost", "Total"], ["remarks", "Remarks"], ["url", "URL"]], "dashboardExtra": ["total_cost", "Total Cost"]}};
+const CATEGORIES = Object.keys(CATEGORY_SCHEMAS);
+const PROFILE_ANCHORS = "1. Seychelles Hydrospatial Observatory for Research and Exploration (SHORE) Institute: marine environment management through the hydrospatial domain, Seychelles blue economy, ocean data governance, SIDS equity, UN Ocean Decade.\n2. Flagship project HARMONiSE: Marine Spatial Data Infrastructure combining satellite-derived bathymetry, autonomous surveys, stakeholder co-design.\n3. Research interest: the High-Income SIDS Paradox, data sovereignty, hydrospatial infrastructure gaps in African SIDS.\n4. Spatial science and geospatial technologies, 15+ years, technical and institutional applications.\n5. Ocean governance and BBNJ, marine spatial planning, Seabed 2030, Seychelles Marine Spatial Plan.\n6. Project management and policy background, UNDP, former Director General Maritime Boundary Delimitation, cross-sector delivery.\n7. Ocean literacy, stakeholder engagement, community/citizen science, science communication.";
+
+let state = { opportunities: [], activeTab: CATEGORIES[0], view: 'dashboard', detailId: null };
+let lastAssessment = null;
+
+// The 59 imported rows never went through an assessment, so they had no
+// real verdict. This infers what the verdict must have been from what
+// actually happened: a status that shows she pursued it (submitted,
+// applying, missed the deadline, drafted, attended) means the assessment
+// clearly said Apply. A status that shows she explicitly chose not to
+// (not pursuing, not applying) means Pass. A status tied to a hard
+// eligibility block (home-fee-only funding, blocked pending a co-applicant)
+// means Pass (Not Eligible). Genuinely undecided markers (??, deciding,
+// a forward-looking note like "For 2026") mean Park. Blank status rows
+// have nothing to infer from and stay unassessed.
+const OUTCOME_INFERENCE = {
+  'Submitted': 'Apply', 'Not Succesful': 'Apply', 'Not Successful': 'Apply',
+  'Successful': 'Apply', 'Applying': 'Apply', 'To Apply': 'Apply',
+  'Drafted, to apply': 'Apply', 'Drafting': 'Apply', 'Missed Deadline': 'Apply',
+  'Applied Not Successful': 'Apply', 'Missed': 'Apply', 'Attended': 'Apply',
+  'Drafted, submission unconfirmed': 'Apply',
+  'MoU for Seychelles Child Project signed on January 23, 2026': 'Apply',
+  'Only for Home-Fee Student': 'Pass (Not Eligible)', 'To Apply - blocked': 'Pass (Not Eligible)',
+  'Not Pursuing': 'Pass', 'Not Applying': 'Pass',
+  'Deciding': 'Park', '??': 'Park', 'For 2026': 'Park',
+};
+
+function migrateRecord(rec) {
+  const f = rec.fields;
+  if (!('action' in f) || !('status' in f)) {
+    if (rec.assessment) {
+      f.status = f.status || 'Pending';
+      f.action = f.action || 'Not Started';
+    } else {
+      f.status = f.outcome || 'Pending';
+      f.outcome = null;
+      f.action = null;
+    }
+  }
+  if (!rec.assessment && !f.outcome && f.status && OUTCOME_INFERENCE[f.status]) {
+    f.outcome = OUTCOME_INFERENCE[f.status];
+  }
+  return rec;
+}
+
+async function loadData() {
+  try {
+    const result = await window.storage.get('opportunities', false);
+    state.opportunities = JSON.parse(result.value).map(migrateRecord);
+  } catch (e) {
+    state.opportunities = SEED.map(migrateRecord);
+    await saveData();
+  }
+  render();
+}
+
+async function saveData() {
+  try {
+    await window.storage.set('opportunities', JSON.stringify(state.opportunities), false);
+  } catch (e) {
+    console.error('Storage failed', e);
+    alert('Could not save. Download a backup now if this keeps happening.');
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str == null ? '' : String(str);
+  return div.innerHTML;
+}
+
+function parseDeadline(str) {
+  if (!str) return null;
+  const cleaned = String(str).replace(/^~/, '').split('(')[0].trim();
+  const d = new Date(cleaned);
+  if (isNaN(d.getTime())) return null;
+  return d;
+}
+
+function urgencyOf(deadlineStr) {
+  if (!deadlineStr) return { cls: 'none', label: '-' };
+  const lower = String(deadlineStr).toLowerCase();
+  if (lower.includes('rolling')) return { cls: 'rolling', label: deadlineStr };
+  const d = parseDeadline(deadlineStr);
+  if (!d) return { cls: 'rolling', label: deadlineStr };
+  const days = Math.floor((d - new Date()) / 86400000);
+  if (days < 0) return { cls: 'passed', label: deadlineStr };
+  if (days <= 60) return { cls: 'soon', label: deadlineStr + ' \u00b7 ' + days + 'd' };
+  return { cls: 'rolling', label: deadlineStr };
+}
+
+function ratingClass(rating) {
+  if (!rating) return '';
+  const r = rating.toLowerCase();
+  if (r.includes('strong')) return 'strong';
+  if (r.includes('partial')) return 'partial';
+  if (r.includes('weak')) return 'weak';
+  return '';
+}
+
+function verdictClass(outcome) {
+  if (!outcome) return '';
+  const o = outcome.toLowerCase();
+  if (o === 'apply') return 'verdict-apply';
+  if (o.startsWith('pass')) return 'verdict-pass';
+  if (o === 'park') return 'verdict-park';
+  return '';
+}
+
+// ---------- navigation ----------
+
+function goDashboard() {
+  state.view = 'dashboard';
+  state.detailId = null;
+  render();
+}
+function goAdd() {
+  state.view = 'add';
+  document.getElementById('input-url').value = '';
+  document.getElementById('input-snippet').value = '';
+  document.getElementById('input-file').value = '';
+  document.getElementById('file-status').className = 'stage-status';
+  document.getElementById('assess-status').className = 'stage-status';
+  document.getElementById('assessment-block').className = 'assessment-block';
+  document.getElementById('assessment-block').innerHTML = '';
+  const btn = document.getElementById('assess-btn');
+  btn.textContent = 'Run assessment';
+  btn.disabled = false;
+  lastAssessment = null;
+  populateCategorySelect();
+  document.getElementById('input-category').value = state.activeTab;
+  document.getElementById('assess-status').className = 'stage-status';
+  document.getElementById('assessment-block').className = 'assessment-block';
+  document.getElementById('assessment-block').innerHTML = '';
+  document.getElementById('assess-btn').textContent = 'Run assessment';
+  document.getElementById('assess-btn').disabled = false;
+  lastAssessment = null;
+  render();
+}
+function goDetail(id) {
+  state.view = 'detail';
+  state.detailId = id;
+  render();
+}
+
+function populateCategorySelect() {
+  const sel = document.getElementById('input-category');
+  sel.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+// ---------- render dispatch ----------
+
+function render() {
+  document.getElementById('view-dashboard').style.display = state.view === 'dashboard' ? 'block' : 'none';
+  document.getElementById('view-add').style.display = state.view === 'add' ? 'block' : 'none';
+  document.getElementById('view-detail').style.display = state.view === 'detail' ? 'block' : 'none';
+  buildTabs();
+  if (state.view === 'dashboard') renderDashboard();
+  if (state.view === 'detail') renderDetail();
+}
+
+function buildTabs() {
+  const nav = document.getElementById('tabs');
+  nav.innerHTML = '';
+  CATEGORIES.forEach(cat => {
+    const btn = document.createElement('button');
+    const count = state.opportunities.filter(o => o.category === cat).length;
+    btn.innerHTML = escapeHtml(cat) + (count ? ` <span class="count">${count}</span>` : '');
+    btn.className = (cat === state.activeTab && state.view === 'dashboard') ? 'active' : '';
+    btn.onclick = () => { state.activeTab = cat; state.view = 'dashboard'; render(); };
+    nav.appendChild(btn);
+  });
+}
+
+// ---------- dashboard ----------
+
+// sort state: { col: 'logged_date'|'deadline'|'outcome'|'action'|'status'|'extra', dir: 'asc'|'desc' }
+let sortState = { col: 'logged_date', dir: 'desc' };
+
+function sortRecords(records, schema) {
+  const { col, dir } = sortState;
+  const mult = dir === 'asc' ? 1 : -1;
+  return records.slice().sort((a, b) => {
+    let va, vb;
+    if (col === 'logged_date') {
+      va = new Date(a.logged_date || 0); vb = new Date(b.logged_date || 0);
+      return mult * (vb - va) * -1; // desc = newest first when dir=desc
+    }
+    if (col === 'deadline') {
+      va = parseDeadline(a.fields[schema.deadlineKey]);
+      vb = parseDeadline(b.fields[schema.deadlineKey]);
+      if (!va && !vb) return 0;
+      if (!va) return 1; if (!vb) return -1;
+      return mult * (va - vb);
+    }
+    if (col === 'extra' && schema.dashboardExtra) {
+      va = (a.fields[schema.dashboardExtra[0]] || '').toLowerCase();
+      vb = (b.fields[schema.dashboardExtra[0]] || '').toLowerCase();
+    } else {
+      va = (a.fields[col] || '').toLowerCase();
+      vb = (b.fields[col] || '').toLowerCase();
+    }
+    return mult * va.localeCompare(vb);
+  });
+}
+
+function sortArrow(col) {
+  if (sortState.col !== col) return ' <span style="opacity:0.3;font-size:10px">&#8597;</span>';
+  return sortState.dir === 'asc'
+    ? ' <span style="font-size:10px">&#8593;</span>'
+    : ' <span style="font-size:10px">&#8595;</span>';
+}
+
+function thBtn(label, col, width) {
+  return `<th style="width:${width};cursor:pointer;user-select:none" onclick="setSort('${col}')">${escapeHtml(label)}${sortArrow(col)}</th>`;
+}
+
+window.setSort = function(col) {
+  if (sortState.col === col) {
+    sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortState.col = col;
+    sortState.dir = col === 'logged_date' ? 'desc' : 'asc';
+  }
+  renderDashboard();
+};
+
+function renderDashboard() {
+  const schema = CATEGORY_SCHEMAS[state.activeTab];
+  document.getElementById('tab-heading').textContent = state.activeTab;
+
+  const records = state.opportunities.filter(o => o.category === state.activeTab);
+
+  // status counts
+  const counts = {};
+  records.forEach(o => {
+    const out = (o.fields.status || 'Pending').trim();
+    counts[out] = (counts[out] || 0) + 1;
+  });
+  const countsBar = document.getElementById('counts-bar');
+  countsBar.innerHTML = `<span class="count-chip"><b>${records.length}</b> total</span>` +
+    Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([k,v]) =>
+      `<span class="count-chip">${escapeHtml(k)} <b>${v}</b></span>`).join('');
+
+  // table head with sort arrows
+  const headRow = document.getElementById('table-head-row');
+  const extraLabel = schema.dashboardExtra ? schema.dashboardExtra[1] : null;
+  headRow.innerHTML =
+    thBtn(schema.titleLabel, 'title', '28%') +
+    thBtn('Deadline', 'deadline', '12%') +
+    thBtn('Outcome', 'outcome', '11%') +
+    thBtn('Action', 'action', '13%') +
+    thBtn('Status', 'status', '13%') +
+    (extraLabel ? thBtn(extraLabel, 'extra', '12%') : '<th style="width:12%"></th>') +
+    thBtn('Date logged', 'logged_date', '9%') +
+    `<th style="width:5%"></th>`;
+
+  const sorted = sortRecords(records, schema);
+
+  const table = document.getElementById('table');
+  const empty = document.getElementById('empty-state');
+  if (sorted.length === 0) { table.style.display = 'none'; empty.style.display = 'block'; }
+  else { table.style.display = ''; empty.style.display = 'none'; }
+
+  const body = document.getElementById('table-body');
+  body.innerHTML = sorted.map(o => {
+    const f = o.fields;
+    const urg = urgencyOf(f[schema.deadlineKey]);
+    const provider = schema.orgKey ? f[schema.orgKey] : null;
+    const extraVal = schema.dashboardExtra ? f[schema.dashboardExtra[0]] : null;
+    return `
+      <tr class="data-row">
+        <td class="title-cell">
+          <button class="title-link" onclick="goDetail('${o.id}')">${escapeHtml(f[schema.titleKey] || '(untitled)')}</button>
+          ${provider ? `<span class="provider-name">${escapeHtml(provider)}</span>` : ''}
+        </td>
+        <td class="deadline"><span class="badge ${urg.cls}">${escapeHtml(urg.label)}</span></td>
+        <td><span class="outcome-text ${verdictClass(f.outcome)}">${escapeHtml(f.outcome || 'Not assessed')}</span></td>
+        <td><span class="outcome-text">${escapeHtml(f.action || '-')}</span></td>
+        <td><span class="outcome-text">${escapeHtml(f.status || '-')}</span></td>
+        <td class="mono" style="font-size:12.5px">${escapeHtml(extraVal || '-')}</td>
+        <td class="mono" style="font-size:11px; color:var(--ink-soft)">${escapeHtml(o.logged_date || '-')}</td>
+        <td><button class="ghost" style="padding:5px 9px" onclick="deleteRow('${o.id}')" title="Delete">&times;</button></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+window.deleteRow = function(id) {
+  const rec = state.opportunities.find(o => o.id === id);
+  if (!rec) return;
+  if (!confirm('Remove "' + rec.fields.title + '" from the log?')) return;
+  state.opportunities = state.opportunities.filter(o => o.id !== id);
+  saveData();
+  render();
+};
+window.goDetail = goDetail;
+
+// ---------- detail page ----------
+
+const OUTCOME_VALUES = ['Apply', 'Pass', 'Park', 'Pass (Not Eligible)'];
+const ACTION_OPTIONS = ['Not Started', 'Drafting', 'Submitted', 'Withdrawn',
+  'Deferred (Later Cycle)', 'Declined to Pursue (Outcome - Apply)', 'Awaiting Clarification'];
+const STATUS_OPTIONS = ['Pending', 'Successful', 'Not Successful', 'Missed Deadline', 'Expired', 'Not Pursued'];
+
+function renderDetail() {
+  const rec = state.opportunities.find(o => o.id === state.detailId);
+  const container = document.getElementById('view-detail');
+  if (!rec) { container.innerHTML = '<p>Not found.</p>'; return; }
+  const schema = CATEGORY_SCHEMAS[rec.category];
+  const f = rec.fields;
+  const provider = schema.orgKey ? f[schema.orgKey] : null;
+
+  const fieldRows = schema.fields
+    .filter(([key]) => key !== schema.titleKey && key !== 'outcome')
+    .map(([key, label]) => {
+      const val = f[key];
+      const isMono = ['fund_size_original','fund_size_scr','fee','funding','cost_scr','travel_cost','accommodation_cost','total_cost','deadline','abstract_deadline','date_applied'].includes(key);
+      if (key === 'url') {
+        return `<div class="detail-field"><div class="k">${escapeHtml(label)}</div><div class="v">${val ? `<a href="${escapeHtml(val)}" target="_blank">${escapeHtml(val)}</a>` : '-'}</div></div>`;
+      }
+      return `<div class="detail-field"><div class="k">${escapeHtml(label)}</div><div class="v ${isMono?'mono':''}">${val ? escapeHtml(val) : '-'}</div></div>`;
+    }).join('');
+
+  let assessmentHtml;
+  if (rec.assessment) {
+    const a = rec.assessment;
+    assessmentHtml = `
+      <div class="verdict-banner ${verdictClass(a.verdict)}">
+        <div><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; opacity:0.7;">Verdict</div>
+        <div class="verdict-label">${escapeHtml(a.verdict || 'Unassessed')}</div></div>
+        <div class="align ${ratingClass(a.overall_alignment)}" style="font-size:13px;">Overall alignment: ${escapeHtml(a.overall_alignment || '-')}</div>
+      </div>
+      <div class="stage-card">
+        <h4>Stage 1 &middot; Eligibility check</h4>
+        <table><thead><tr><th>Requirement</th><th>Met?</th><th>Notes</th></tr></thead><tbody>
+        ${(a.eligibility||[]).map(e => `<tr><td>${escapeHtml(e.requirement)}</td><td class="${e.met==='Yes'?'met-yes':e.met==='No'?'met-no':'met-unclear'}">${escapeHtml(e.met)}</td><td>${escapeHtml(e.notes||'')}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+      <div class="stage-card">
+        <h4>Stage 2 &middot; Criteria extracted</h4>
+        <ul class="plain">${(a.criteria||[]).map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>None extracted.</li>'}</ul>
+      </div>
+      <div class="stage-card">
+        <h4>Stage 3 &middot; Profile mapping</h4>
+        <table><thead><tr><th>Criterion</th><th>Anchor</th><th>Rating</th><th>Notes</th></tr></thead><tbody>
+        ${(a.profile_mapping||[]).map(m => `<tr><td>${escapeHtml(m.criterion)}</td><td>${escapeHtml(m.anchor||'')}</td><td class="align ${ratingClass(m.rating)}">${escapeHtml(m.rating)}</td><td>${escapeHtml(m.notes||'')}</td></tr>`).join('')}
+        </tbody></table>
+      </div>
+      <div class="stage-card">
+        <h4>Stage 4 &middot; Summary</h4>
+        <p><b>Top strengths</b></p>
+        <ul class="plain">${(a.top_strengths||[]).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>None noted.</li>'}</ul>
+        <p><b>Flagged gaps</b></p>
+        <ul class="plain">${(a.flagged_gaps||[]).map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>None noted.</li>'}</ul>
+        <p><b>Recommended angle</b></p>
+        <p>${escapeHtml(a.recommended_angle || 'None provided.')}</p>
+      </div>
+    `;
+  } else {
+    assessmentHtml = `<div class="stage-card"><p class="hint" style="margin:0;">Imported from the existing tracker. No assessment on file.</p></div>`;
+  }
+
+  container.innerHTML = `
+    <div class="page-header">
+      <button class="back-link" onclick="goDashboard()">&larr; Back to dashboard</button>
+    </div>
+    <div class="detail-header">
+      <div class="detail-title">${escapeHtml(f[schema.titleKey] || '(untitled)')}</div>
+      ${provider ? `<div class="detail-provider">${escapeHtml(provider)}</div>` : ''}
+    </div>
+    <div class="outcome-row">
+      <label style="margin:0;">Outcome</label>
+      <span class="outcome-text ${verdictClass(f.outcome)}" style="font-size:16px; font-weight:600;">${escapeHtml(f.outcome || 'Not assessed')}</span>
+      <span class="hint" style="margin:0;">(set by the assessment, not editable)</span>
+    </div>
+    <div class="outcome-row">
+      <label style="margin:0;">Action</label>
+      <select class="outcome-select" id="action-select"></select>
+    </div>
+    <div class="outcome-row">
+      <label style="margin:0;">Status</label>
+      <select class="outcome-select" id="status-select"></select>
+    </div>
+    <div class="detail-grid">${fieldRows}</div>
+    <h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Assessment</h3>
+    ${assessmentHtml}
+    <div class="form-actions" style="margin-top:20px;">
+      <button class="danger" onclick="deleteFromDetail('${rec.id}')">Delete this entry</button>
+    </div>
+  `;
+
+  const actionSel = document.getElementById('action-select');
+  const actionOpts = ACTION_OPTIONS.includes(f.action) ? ACTION_OPTIONS : (f.action ? [f.action, ...ACTION_OPTIONS] : ACTION_OPTIONS);
+  actionSel.innerHTML = actionOpts.map(o => `<option value="${escapeHtml(o)}" ${f.action===o?'selected':''}>${escapeHtml(o)}</option>`).join('');
+  actionSel.onchange = () => { f.action = actionSel.value; saveData(); render(); };
+
+  const statusSel = document.getElementById('status-select');
+  const statusOpts = STATUS_OPTIONS.includes(f.status) ? STATUS_OPTIONS : (f.status ? [f.status, ...STATUS_OPTIONS] : STATUS_OPTIONS);
+  statusSel.innerHTML = statusOpts.map(o => `<option value="${escapeHtml(o)}" ${f.status===o?'selected':''}>${escapeHtml(o)}${!STATUS_OPTIONS.includes(o)&&o===f.status?' (imported)':''}</option>`).join('');
+  statusSel.onchange = () => { f.status = statusSel.value; saveData(); render(); };
+}
+
+window.goDashboard = goDashboard;
+window.deleteFromDetail = function(id) {
+  const rec = state.opportunities.find(o => o.id === id);
+  if (!rec) return;
+  if (!confirm('Remove "' + rec.fields.title + '" from the log?')) return;
+  state.opportunities = state.opportunities.filter(o => o.id !== id);
+  saveData();
+  goDashboard();
+};
+
+// ---------- add / assess flow ----------
+
+if (window.pdfjsLib) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+}
+
+async function extractFromFile(file) {
+  const name = file.name.toLowerCase();
+  const buffer = await file.arrayBuffer();
+  if (name.endsWith('.docx')) {
+    const result = await mammoth.extractRawText({ arrayBuffer: buffer });
+    return result.value;
+  }
+  if (name.endsWith('.pdf')) {
+    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+    let text = '';
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      text += content.items.map(it => it.str).join(' ') + '\n\n';
+    }
+    return text;
+  }
+  throw new Error('Unsupported file type, use .pdf or .docx');
+}
+
+document.getElementById('input-file').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const statusEl = document.getElementById('file-status');
+  statusEl.className = 'stage-status visible working';
+  statusEl.textContent = 'Extracting text from ' + file.name + '...';
+  try {
+    const text = await extractFromFile(file);
+    if (!text || text.trim().length < 40) {
+      statusEl.className = 'stage-status visible error';
+      statusEl.textContent = 'Almost nothing extracted from ' + file.name + ', likely a scanned or image-based PDF. Paste the text manually instead.';
+      return;
+    }
+    const textarea = document.getElementById('input-snippet');
+    textarea.value = (textarea.value.trim() ? textarea.value.trim() + '\n\n---\n\n' : '') + text.trim();
+    statusEl.className = 'stage-status visible done';
+    statusEl.textContent = 'Extracted ' + text.trim().length + ' characters from ' + file.name + '.';
+  } catch (err) {
+    console.error(err);
+    statusEl.className = 'stage-status visible error';
+    statusEl.textContent = 'Could not read ' + file.name + ' (' + err.message + '). Paste the text manually instead.';
+  }
+});
+
+document.getElementById('add-btn').onclick = goAdd;
+document.getElementById('back-from-add').onclick = goDashboard;
+
+async function callApi(prompt) {
+  const response = await fetch("/api/assess", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
+      messages: [{ role: "user", content: prompt }],
+      tools: [{ type: "web_search_20250305", name: "web_search" }]
+    })
+  });
+  const data = await response.json();
+  if (data.error) {
+    throw new Error('API error ' + response.status + ': ' + JSON.stringify(data.error));
+  }
+  const stop = data.stop_reason || 'unknown';
+  const contentTypes = (data.content || []).map(b => b.type).join(', ') || 'empty';
+  const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text);
+  if (textBlocks.length === 0) {
+    throw new Error(
+      'The API returned no text. stop_reason: "' + stop + '", content types: [' + contentTypes + ']. ' +
+      (stop === 'end_turn' ? 'The prompt may have triggered a content filter — try pasting the call text directly into the Details field rather than leaving it to web search.' : '')
+    );
+  }
+  let raw = textBlocks.join('\n').trim().replace(/```json/g, '').replace(/```/g, '').trim();
+  const jsonMatch = raw.match(/\{[\s\S]*/);
+  if (!jsonMatch) throw new Error('No JSON in the response. Paste more detail from the page and try again.');
+  let candidate = jsonMatch[0];
+  try { return JSON.parse(candidate); }
+  catch (e) {
+    let repaired = candidate
+      .replace(/,\s*"[^"]*"\s*:\s*[^,}\]]*$/, '')
+      .replace(/,\s*$/, '');
+    const openArr = (repaired.match(/\[/g)||[]).length - (repaired.match(/\]/g)||[]).length;
+    const openObj = (repaired.match(/\{/g)||[]).length - (repaired.match(/\}/g)||[]).length;
+    for (let i = 0; i < openArr; i++) repaired += ']';
+    for (let i = 0; i < openObj; i++) repaired += '}';
+    try { return JSON.parse(repaired); }
+    catch (e2) { throw new Error('Response could not be parsed even after repair. Paste the call text into the Details field and try again.'); }
+  }
+}
+
+document.getElementById('assess-btn').onclick = async () => {
+  const url = document.getElementById('input-url').value.trim();
+  const snippet = document.getElementById('input-snippet').value.trim();
+  const category = document.getElementById('input-category').value;
+  const statusEl = document.getElementById('assess-status');
+  const block = document.getElementById('assessment-block');
+  const btn = document.getElementById('assess-btn');
+
+  if (!url && !snippet) { alert('Paste a URL or some details first.'); return; }
+
+  btn.disabled = true;
+  lastAssessment = null;
+  block.className = 'assessment-block';
+  block.innerHTML = '';
+
+  // ---- Stage 0: extract factual details ----
+  let s0 = {};
+  try {
+    statusEl.className = 'stage-status visible working';
+    statusEl.textContent = 'Stage 0: extracting opportunity details...';
+    s0 = await callApi(buildStage0Prompt(url, snippet));
+  } catch (e) {
+    console.warn('Stage 0 extraction failed, continuing with empty fields:', e.message);
+  }
+
+  // ---- Stage 1-4: full assessment ----
+  try {
+    statusEl.textContent = 'Running Stage 1 through 4 against the profile anchors...';
+    const parsed = await callApi(buildAssessPrompt(url, snippet, category, s0));
+
+    // merge confirmed Stage 0 values
+    parsed.title = s0.title || parsed.title;
+    parsed.provider = s0.provider || parsed.provider;
+    parsed.deadline = s0.deadline || parsed.deadline;
+    parsed.amount_original = s0.amount_original || parsed.amount_original;
+    parsed.amount_scr = s0.amount_scr || parsed.amount_scr;
+    parsed.duration = s0.duration || parsed.duration;
+
+    const fields = mapAssessedToFields(category, parsed, url);
+    if ('date_applied' in fields) fields.date_applied = null; // left blank for user to fill later
+
+    const assessment = {
+      eligibility: parsed.eligibility || [],
+      criteria: parsed.criteria || [],
+      profile_mapping: parsed.profile_mapping || [],
+      top_strengths: parsed.top_strengths || [],
+      flagged_gaps: parsed.flagged_gaps || [],
+      recommended_angle: parsed.recommended_angle || '',
+      overall_alignment: parsed.overall_alignment || 'Weak',
+      verdict: parsed.verdict || 'Pass',
+      stage0: s0,
+    };
+
+    lastAssessment = { url, category, fields, assessment, confirmedReady: true };
+
+    statusEl.className = 'stage-status visible done';
+    statusEl.textContent = 'Assessment complete. Review below, then confirm to log it.';
+    block.className = 'assessment-block visible';
+    block.innerHTML = renderStage0Summary(s0) + renderAssessmentPreview(assessment);
+    btn.textContent = 'Confirm & log to tracker';
+    btn.disabled = false;
+    btn.onclick = () => { logAssessedOpportunity(); };
+  } catch (e) {
+    console.error(e);
+    statusEl.className = 'stage-status visible error';
+    statusEl.textContent = e.message;
+    btn.textContent = 'Run assessment';
+    btn.disabled = false;
+    btn.onclick = null; // reset so next click re-runs the full handler
+    // re-attach the handler by reloading it cleanly
+    document.getElementById('assess-btn').onclick = arguments.callee;
+  }
+};
+
+function renderStage0Summary(s0) {
+  const fields = [
+    ['Implementor / Provider', s0.provider],
+    ['Location', s0.location],
+    ['Date Released', s0.date_released],
+    ['Deadline', s0.deadline],
+    ['Date Applied', null],
+    ['Fund Size / Salary (Original)', s0.amount_original],
+    ['Fund Size / Salary (SCR)', s0.amount_scr],
+    ['Length / Duration', s0.duration],
+    ['Contract Type', s0.contract_type],
+  ].filter(([, v]) => v !== undefined);
+  return `<div class="stage-card" style="max-width:820px; margin-bottom:14px;">
+    <h4>Stage 0 &middot; Extracted details</h4>
+    <div class="detail-grid" style="margin-bottom:0; border:none;">
+      ${fields.map(([k, v]) => `<div class="detail-field">
+        <div class="k">${escapeHtml(k)}</div>
+        <div class="v">${v ? escapeHtml(v) : '<span style="color:var(--ink-soft)">-</span>'}</div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function buildStage0Prompt(url, snippet) {
+  return `You are extracting factual details from an opportunity listing (grant, fellowship, scholarship, job, consultancy, training, or conference). Extract only what is explicitly stated; do not invent or guess values not present in the source.
+
+URL: ${url}
+PASTED TEXT:
+${snippet || '(none pasted — use web search on the URL to find the page, then extract from it)'}
+
+Return ONLY valid JSON, no preamble:
+{
+  "title": "full name of the opportunity",
+  "provider": "organisation or body offering it, or null",
+  "location": "location or country where the role/opportunity is based, or null",
+  "date_released": "date the call was published/opened, exactly as stated, or null",
+  "deadline": "application deadline exactly as stated, or null",
+  "amount_original": "funding, prize, stipend, salary or fee in its original currency exactly as stated, or null",
+  "amount_scr": "same amount in Seychelles Rupees (SCR), using today's exchange rate — state the rate used in brackets, e.g. SCR 69,000 (1 USD = 13.8 SCR), or null if not calculable",
+  "duration": "length or duration of the opportunity exactly as stated, or null",
+  "contract_type": "e.g. Full-time, Part-time, Fixed-term, Consultancy, Remote, or null"
+}`;
+}
+
+function buildAssessPrompt(url, snippet, category, s0) {
+  const confirmedDetails = s0 ? `
+CONFIRMED DETAILS (already extracted and verified by the user — do not re-extract these):
+Title: ${s0.title || 'unknown'}
+Provider: ${s0.provider || 'unknown'}
+Deadline: ${s0.deadline || 'unknown'}
+Fund size: ${s0.amount_original || 'unknown'}
+Duration: ${s0.duration || 'unknown'}
+` : '';
+
+  return `You are an opportunity analyst assessing a fellowship, grant, scholarship,
+job, consultancy, training, or conference against a specific profile. Work through
+four stages internally (eligibility check, criteria extraction, profile mapping,
+summary) and return the complete result in one response. Be strict: do not inflate
+weak alignment to moderate, and do not use generic language like "passionate about"
+or "unique opportunity." You have ample token budget — return the full JSON
+including all arrays, do not truncate or omit fields.
+${confirmedDetails}
+PROFILE ANCHORS:
+${PROFILE_ANCHORS}
+
+URL: ${url}
+CATEGORY: ${category}
+PASTED DETAILS FROM THE PAGE:
+${snippet || '(none pasted, try a web search on the URL/title first; if nothing useful comes back, assess cautiously from the URL alone and say so in recommended_angle)'}
+
+Return ONLY valid JSON, no preamble, matching this exact shape:
+{
+  "title": "opportunity title",
+  "provider": "implementing organisation or location, or null",
+  "deadline": "deadline as stated, or null",
+  "amount_original": "funding/fee/amount as stated in its original currency, or null",
+  "amount_scr": "same amount converted to Seychelles Rupees using today's rate, stating the rate used, or null if not calculable",
+  "duration": "duration or length, or null",
+  "description": "2-3 factual sentences: what it is, who can apply, what it funds or covers",
+  "format": "In person / Online / Hybrid, or null (trainings/conferences only)",
+  "fee": "fee if separate from amount_original, or null",
+  "cost_scr": "fee converted to SCR, or null",
+  "travel_cost": "estimated travel cost in SCR if this is a trainings/conferences entry requiring travel, or null",
+  "accommodation_cost": "estimated accommodation cost in SCR, or null",
+  "total_cost": "sum of fee+travel+accommodation in SCR, or null",
+  "remarks": "any notable inclusions (e.g. fee includes meals), or null",
+  "abstract_deadline": "abstract/submission deadline if this is a conference, or null",
+  "abstract_title": "a suggested abstract title if this is a conference and none is set yet, or null",
+  "program": "programme/schedule outline if this is a conference, or null",
+  "eligibility": [ {"requirement": "...", "met": "Yes"|"No"|"Unclear", "notes": "..."} ],
+  "criteria": ["assessment criterion 1", "..."],
+  "profile_mapping": [ {"criterion": "...", "anchor": "which profile anchor this maps to", "rating": "Strong"|"Partial"|"Weak", "notes": "..."} ],
+  "top_strengths": ["...", "...", "..."],
+  "flagged_gaps": ["...", "..."],
+  "recommended_angle": "1-2 sentences on the application narrative angle, or why to pass/park",
+  "overall_alignment": "Strong"|"Partial"|"Weak",
+  "verdict": "Apply"|"Pass"|"Park"|"Pass (Not Eligible)"
+}
+
+Use "Pass (Not Eligible)" instead of "Pass" specifically when Stage 1 finds a
+hard eligibility requirement that is clearly not met (e.g. a degree
+requirement not held, a citizenship restriction, a track record threshold not
+reached) rather than a general weak fit on criteria.`;
+}
+
+function mapAssessedToFields(category, p, url) {
+  const common = { title: p.title || url, deadline: p.deadline || null,
+    outcome: p.verdict || 'Park', action: 'Not Started', status: 'Pending', url };
+  switch (category) {
+    case 'Grants & Fellowships':
+    case 'Consultancies & Jobs':
+    case 'Scholarships':
+      return { ...common, implementor: p.provider || null, date_applied: null,
+        fund_size_original: p.amount_original || null, fund_size_scr: p.amount_scr || null,
+        duration: p.duration || null, description: p.description || null };
+    case 'Masters':
+      return { ...common, location: p.provider || null, funding: p.amount_original || null };
+    case 'PhD':
+      return { location: p.provider || null, title: common.title, url, deadline: common.deadline,
+        fee: p.amount_original || null, outcome: common.outcome };
+    case 'Jobs':
+      return { ...common, implementor: p.provider || null, location: p.location || null,
+        date_applied: null, contract_type: p.contract_type || null,
+        salary_original: p.amount_original || null, salary_scr: p.amount_scr || null,
+        description: p.description || null };
+    case 'Internship':
+      return { ...common, funding: p.amount_original || null };
+    case 'Trainings':
+      return { ...common, location: p.provider || null, date_applied: null, duration: p.duration || null,
+        format: p.format || null, fee: p.fee || p.amount_original || null, cost_scr: p.cost_scr || null,
+        travel_cost: p.travel_cost || null, accommodation_cost: p.accommodation_cost || null,
+        total_cost: p.total_cost || null, remarks: p.remarks || null };
+    case 'Conferences':
+      return { title: common.title, url, location: p.provider || null, duration: p.duration || null,
+        description: p.description || null, abstract_deadline: p.abstract_deadline || null,
+        abstract_title: p.abstract_title || null, program: p.program || null, outcome: common.outcome,
+        format: p.format || null, fee: p.fee || p.amount_original || null, cost_scr: p.cost_scr || null,
+        travel_cost: p.travel_cost || null, accommodation_cost: p.accommodation_cost || null,
+        total_cost: p.total_cost || null, remarks: p.remarks || null };
+    default:
+      return common;
+  }
+}
+
+function renderAssessmentPreview(a) {
+  return `
+    <div class="verdict-banner ${verdictClass(a.verdict)}">
+      <div><div style="font-size:11px; text-transform:uppercase; letter-spacing:0.05em; opacity:0.7;">Verdict</div>
+      <div class="verdict-label">${escapeHtml(a.verdict)}</div></div>
+      <div class="align ${ratingClass(a.overall_alignment)}" style="font-size:13px;">Overall alignment: ${escapeHtml(a.overall_alignment)}</div>
+    </div>
+    <div class="stage-card">
+      <h4>Stage 1 &middot; Eligibility check</h4>
+      <table><thead><tr><th>Requirement</th><th>Met?</th><th>Notes</th></tr></thead><tbody>
+      ${a.eligibility.map(e => `<tr><td>${escapeHtml(e.requirement)}</td><td class="${e.met==='Yes'?'met-yes':e.met==='No'?'met-no':'met-unclear'}">${escapeHtml(e.met)}</td><td>${escapeHtml(e.notes||'')}</td></tr>`).join('') || '<tr><td colspan="3">None extracted.</td></tr>'}
+      </tbody></table>
+    </div>
+    <div class="stage-card">
+      <h4>Stage 2 &middot; Criteria extracted</h4>
+      <ul class="plain">${a.criteria.map(c => `<li>${escapeHtml(c)}</li>`).join('') || '<li>None extracted.</li>'}</ul>
+    </div>
+    <div class="stage-card">
+      <h4>Stage 3 &middot; Profile mapping</h4>
+      <table><thead><tr><th>Criterion</th><th>Anchor</th><th>Rating</th><th>Notes</th></tr></thead><tbody>
+      ${a.profile_mapping.map(m => `<tr><td>${escapeHtml(m.criterion)}</td><td>${escapeHtml(m.anchor||'')}</td><td class="align ${ratingClass(m.rating)}">${escapeHtml(m.rating)}</td><td>${escapeHtml(m.notes||'')}</td></tr>`).join('') || '<tr><td colspan="4">None extracted.</td></tr>'}
+      </tbody></table>
+    </div>
+    <div class="stage-card">
+      <h4>Stage 4 &middot; Summary</h4>
+      <p><b>Top strengths</b></p>
+      <ul class="plain">${a.top_strengths.map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>None noted.</li>'}</ul>
+      <p><b>Flagged gaps</b></p>
+      <ul class="plain">${a.flagged_gaps.map(s => `<li>${escapeHtml(s)}</li>`).join('') || '<li>None noted.</li>'}</ul>
+      <p><b>Recommended angle</b></p>
+      <p>${escapeHtml(a.recommended_angle)}</p>
+    </div>
+  `;
+}
+
+function logAssessedOpportunity() {
+  const id = 'opp-' + Date.now();
+  state.opportunities.push({
+    id, category: lastAssessment.category, fields: lastAssessment.fields,
+    assessment: lastAssessment.assessment, logged_date: new Date().toISOString().slice(0,10),
+  });
+  saveData();
+  state.activeTab = lastAssessment.category;
+  lastAssessment = null;
+  goDetail(id);
+}
+
+function csvEscape(val) {
+  const s = val == null ? '' : String(val);
+  if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+}
+
+function exportCSV() {
+  const schema = CATEGORY_SCHEMAS[state.activeTab];
+  const records = state.opportunities.filter(o => o.category === state.activeTab);
+  const columns = [...schema.fields.filter(([k]) => k !== 'outcome'), ['outcome', 'Outcome'], ['action', 'Action'], ['status', 'Status']];
+  const headerRow = columns.map(([, label]) => csvEscape(label)).join(',');
+  const rows = records.map(r => columns.map(([key]) => csvEscape(r.fields[key])).join(','));
+  const csv = [headerRow, ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = state.activeTab.replace(/[^a-z0-9]+/gi, '-') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+}
+
+document.getElementById('csv-btn').onclick = exportCSV;
+
+document.getElementById('snapshot-btn').onclick = () => {
+  goDashboard(); // clean visual state before capturing
+  const currentHtml = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  const newSeedLiteral = 'const SEED = ' + JSON.stringify(state.opportunities) + ';\nconst CATEGORY_SCHEMAS';
+  const seedPattern = /const SEED = \[[\s\S]*?\];\nconst CATEGORY_SCHEMAS/;
+  if (!seedPattern.test(currentHtml)) {
+    alert('Could not build the standalone copy, the file structure looks different than expected. Use "Download backup" instead and send me that JSON.');
+    return;
+  }
+  const updatedHtml = currentHtml.replace(seedPattern, newSeedLiteral);
+  const blob = new Blob([updatedHtml], { type: 'text/html' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'opportunity-log-' + new Date().toISOString().slice(0, 10) + '.html';
+  a.click();
+};
+
+loadData();
+
+</script>
+</body>
+</html>
