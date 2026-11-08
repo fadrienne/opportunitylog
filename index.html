@@ -210,11 +210,12 @@ ul.plain li { margin-bottom: 5px; }
 select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 2px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 13.5px; }
 
 .home-intro { margin: 0 0 20px; color: var(--ink-soft); }
-.home-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.home-toolbar { justify-content: flex-end; }
+.home-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.home-metrics, .home-grid { display: contents; }
 .home-metric, .home-panel { background: white; border: 1px solid var(--line); padding: 18px; }
 .home-metric b { display: block; color: var(--sea-deep); font-size: 25px; line-height: 1.2; }
 .home-metric span { color: var(--ink-soft); font-size: 12px; }
-.home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .home-panel h3, .workspace-section h3 { margin: 0 0 12px; color: var(--sea-deep); font-size: 16px; font-weight: 600; }
 .home-list { list-style: none; padding: 0; margin: 0; }
 .home-list li { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
@@ -248,13 +249,15 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
   tr.data-row { border-bottom: 1px solid var(--line); padding: 12px 0; }
   td { border: none; padding: 3px 0; }
   .detail-grid { grid-template-columns: 1fr; }
-  .home-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-grid, .workspace-grid { grid-template-columns: 1fr; }
+  .home-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .workspace-grid { grid-template-columns: 1fr; }
   .home-list li { align-items: flex-start; }
 }
 @media (max-width: 760px) {
-  .home-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .home-grid, .workspace-grid { grid-template-columns: 1fr; }
+  .workspace-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 420px) {
+  .home-cards { grid-template-columns: 1fr; }
 }
 @media (max-width: 900px) {
   .subtitle { white-space: normal; }
@@ -273,25 +276,26 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 <main id="app">
 
   <div id="view-home" style="display:none">
-    <div class="toolbar">
-      <h2>Command center</h2>
+    <div class="toolbar home-toolbar">
       <button class="primary" id="home-add-btn" type="button">+ Log opportunity</button>
     </div>
     <p class="home-intro">Deadlines, next steps, and ideas in progress across your opportunities.</p>
-    <div class="home-metrics" id="home-metrics"></div>
-    <div class="home-grid">
-      <section class="home-panel">
-        <h3>Upcoming deadlines</h3>
-        <ul class="home-list" id="home-upcoming"></ul>
-      </section>
-      <section class="home-panel">
-        <h3>Next actions</h3>
-        <ul class="home-list" id="home-next-actions"></ul>
-      </section>
-      <section class="home-panel">
-        <h3>Active ideas</h3>
-        <ul class="home-list" id="home-active-ideas"></ul>
-      </section>
+    <div class="home-cards">
+      <div class="home-metrics" id="home-metrics"></div>
+      <div class="home-grid">
+        <section class="home-panel">
+          <h3>Upcoming deadlines</h3>
+          <ul class="home-list" id="home-upcoming"></ul>
+        </section>
+        <section class="home-panel">
+          <h3>Next actions</h3>
+          <ul class="home-list" id="home-next-actions"></ul>
+        </section>
+        <section class="home-panel">
+          <h3>Active ideas</h3>
+          <ul class="home-list" id="home-active-ideas"></ul>
+        </section>
+      </div>
     </div>
   </div>
 
