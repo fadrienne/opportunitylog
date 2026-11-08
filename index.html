@@ -112,6 +112,10 @@ button.danger { color: var(--coral); border-color: var(--coral); background: non
   background: white; border: 1px solid var(--line); border-radius: 2px; color: var(--ink-soft);
 }
 .count-chip b { color: var(--ink); }
+button.count-chip { cursor: pointer; }
+button.count-chip:hover, button.count-chip:focus-visible { border-color: var(--sea-mid); color: var(--sea-mid); }
+button.count-chip.active { background: var(--sea-mid); border-color: var(--sea-mid); color: white; }
+button.count-chip.active b { color: white; }
 
 table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--line); }
 th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
@@ -130,7 +134,6 @@ td.title-cell { max-width: 340px; }
 
 td.deadline { font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 12.5px; white-space: nowrap; }
 .badge { display: inline-block; font-size: 13px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; }
-.badge.passed { color: var(--dark-blue); font-style: italic; font-weight: 400; }
 .badge.soon { color: #000; font-weight: 700; font-style: normal; }
 .badge.rolling { color: #000; font-weight: 400; font-style: normal; }
 .badge.none { color: var(--ink-soft); font-weight: 400; }
@@ -206,6 +209,35 @@ ul.plain li { margin-bottom: 5px; }
 .outcome-row label { margin: 0; }
 select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid var(--line); border-radius: 2px; font-family: 'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-size: 13.5px; }
 
+.home-intro { margin: 0 0 20px; color: var(--ink-soft); }
+.home-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-bottom: 20px; }
+.home-metric, .home-panel { background: white; border: 1px solid var(--line); padding: 18px; }
+.home-metric b { display: block; color: var(--sea-deep); font-size: 25px; line-height: 1.2; }
+.home-metric span { color: var(--ink-soft); font-size: 12px; }
+.home-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.home-panel h3, .workspace-section h3 { margin: 0 0 12px; color: var(--sea-deep); font-size: 16px; font-weight: 600; }
+.home-list { list-style: none; padding: 0; margin: 0; }
+.home-list li { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); }
+.home-list li:first-child { border-top: 0; padding-top: 0; }
+.home-item-title { display: block; color: var(--ink); font-weight: 600; }
+.home-item-meta { display: block; color: var(--ink-soft); font-size: 12px; }
+.home-list .ghost { flex-shrink: 0; }
+.workspace-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 20px 0; }
+.workspace-section { min-width: 0; background: white; border: 1px solid var(--line); padding: 18px; }
+.workspace-section textarea { min-height: 110px; }
+.workspace-task { display: flex; align-items: flex-start; gap: 9px; padding: 9px 0; border-top: 1px solid var(--line); }
+.workspace-task:first-child { border-top: 0; }
+.workspace-task input { margin-top: 5px; }
+.workspace-task span { flex: 1; overflow-wrap: anywhere; }
+.workspace-task.done span { color: var(--ink-soft); text-decoration: line-through; }
+.workspace-task .ghost { padding: 3px 8px; }
+.workspace-add-row { display: flex; gap: 8px; margin-top: 10px; }
+.workspace-add-row input { min-width: 0; flex: 1; }
+.workspace-material { border-top: 1px solid var(--line); padding: 9px 0; display: flex; gap: 10px; align-items: flex-start; }
+.workspace-material:first-child { border-top: 0; }
+.workspace-material a { flex: 1; overflow-wrap: anywhere; }
+.workspace-material .ghost { padding: 3px 8px; }
+
 @media (max-width: 640px) {
   header { padding: 22px 16px 0 16px; }
   .subtitle { white-space: normal; }
@@ -216,6 +248,16 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
   tr.data-row { border-bottom: 1px solid var(--line); padding: 12px 0; }
   td { border: none; padding: 3px 0; }
   .detail-grid { grid-template-columns: 1fr; }
+  .home-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-grid, .workspace-grid { grid-template-columns: 1fr; }
+  .home-list li { align-items: flex-start; }
+}
+@media (max-width: 760px) {
+  .home-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-grid, .workspace-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 900px) {
+  .subtitle { white-space: normal; }
 }
 </style>
 </head>
@@ -230,10 +272,34 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 
 <main id="app">
 
+  <div id="view-home" style="display:none">
+    <div class="toolbar">
+      <h2>Command center</h2>
+      <button class="primary" id="home-add-btn" type="button">+ Log opportunity</button>
+    </div>
+    <p class="home-intro">Deadlines, next steps, and ideas in progress across your opportunities.</p>
+    <div class="home-metrics" id="home-metrics"></div>
+    <div class="home-grid">
+      <section class="home-panel">
+        <h3>Upcoming deadlines</h3>
+        <ul class="home-list" id="home-upcoming"></ul>
+      </section>
+      <section class="home-panel">
+        <h3>Next actions</h3>
+        <ul class="home-list" id="home-next-actions"></ul>
+      </section>
+      <section class="home-panel">
+        <h3>Active ideas</h3>
+        <ul class="home-list" id="home-active-ideas"></ul>
+      </section>
+    </div>
+  </div>
+
   <div id="view-dashboard">
     <div class="toolbar">
       <h2 id="tab-heading">Grants &amp; Fellowships</h2>
       <div style="display:flex; gap:10px;">
+        <button class="ghost" id="archive-toggle" type="button"></button>
         <button class="ghost" id="csv-btn">Download CSV</button>
         <button class="ghost" id="snapshot-btn">Download standalone copy</button>
         <button class="primary" id="add-btn">+ Log opportunity</button>
@@ -245,8 +311,8 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
       <tbody id="table-body"></tbody>
     </table>
     <div class="empty" id="empty-state" style="display:none">
-      <span class="glyph">nothing logged yet</span>
-      Log the first opportunity in this category.
+      <span class="glyph" id="empty-glyph">nothing logged yet</span>
+      <span id="empty-message">Log the first opportunity in this category.</span>
     </div>
   </div>
 
@@ -288,7 +354,7 @@ const CATEGORY_SCHEMAS = {"Grants & Fellowships": {"titleKey": "title", "titleLa
 const CATEGORIES = Object.keys(CATEGORY_SCHEMAS);
 const PROFILE_ANCHORS = "1. Seychelles Hydrospatial Observatory for Research and Exploration (SHORE) Institute: marine environment management through the hydrospatial domain, Seychelles blue economy, ocean data governance, SIDS equity, UN Ocean Decade.\n2. Flagship project HARMONiSE: Marine Spatial Data Infrastructure combining satellite-derived bathymetry, autonomous surveys, stakeholder co-design.\n3. Research interest: the High-Income SIDS Paradox, data sovereignty, hydrospatial infrastructure gaps in African SIDS.\n4. Spatial science and geospatial technologies, 15+ years, technical and institutional applications.\n5. Ocean governance and BBNJ, marine spatial planning, Seabed 2030, Seychelles Marine Spatial Plan.\n6. Project management and policy background, UNDP, former Director General Maritime Boundary Delimitation, cross-sector delivery.\n7. Ocean literacy, stakeholder engagement, community/citizen science, science communication.";
 
-let state = { opportunities: [], activeTab: CATEGORIES[0], view: 'dashboard', detailId: null };
+let state = { opportunities: [], activeTab: CATEGORIES[0], statusFilter: 'all', deadlineFilter: 'all', assessmentFilter: 'all', showArchived: false, view: 'home', detailId: null, detailReturnView: 'dashboard', addReturnView: 'dashboard' };
 let lastAssessment = null;
 
 // The 59 imported rows never went through an assessment, so they had no
@@ -366,14 +432,39 @@ function parseDeadline(str) {
   return d;
 }
 
+function deadlineDaysUntil(deadlineStr) {
+  const deadline = parseDeadline(deadlineStr);
+  if (!deadline) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  deadline.setHours(0, 0, 0, 0);
+  return Math.floor((deadline - today) / 86400000);
+}
+
+function isPendingOpportunity(opportunity) {
+  return String(opportunity.fields.status || '').trim().toLowerCase() === 'pending';
+}
+
+function isActiveOpportunity(opportunity) {
+  return !opportunity.archived && isPendingOpportunity(opportunity);
+}
+
+function deadlineGroup(deadlineStr) {
+  if (!deadlineStr || String(deadlineStr).toLowerCase().includes('rolling')) return null;
+  const days = deadlineDaysUntil(deadlineStr);
+  if (days === null) return null;
+  if (days < 0) return null;
+  if (days <= 60) return 'upcoming';
+  return null;
+}
+
 function urgencyOf(deadlineStr) {
   if (!deadlineStr) return { cls: 'none', label: '-' };
   const lower = String(deadlineStr).toLowerCase();
   if (lower.includes('rolling')) return { cls: 'rolling', label: deadlineStr };
-  const d = parseDeadline(deadlineStr);
-  if (!d) return { cls: 'rolling', label: deadlineStr };
-  const days = Math.floor((d - new Date()) / 86400000);
-  if (days < 0) return { cls: 'passed', label: deadlineStr };
+  const days = deadlineDaysUntil(deadlineStr);
+  if (days === null) return { cls: 'rolling', label: deadlineStr };
+  if (days < 0) return { cls: 'none', label: deadlineStr };
   if (days <= 60) return { cls: 'soon', label: deadlineStr + ' \u00b7 ' + days + 'd' };
   return { cls: 'rolling', label: deadlineStr };
 }
@@ -403,8 +494,17 @@ function goDashboard() {
   state.detailId = null;
   render();
 }
+function goHome() {
+  state.view = 'home';
+  state.detailId = null;
+  state.showArchived = false;
+  render();
+}
 function goAdd() {
+  state.addReturnView = state.view === 'home' ? 'home' : 'dashboard';
   state.view = 'add';
+  document.getElementById('back-from-add').textContent =
+    `← Back to ${state.addReturnView === 'home' ? 'command center' : 'dashboard'}`;
   document.getElementById('input-url').value = '';
   document.getElementById('input-snippet').value = '';
   document.getElementById('input-file').value = '';
@@ -426,9 +526,20 @@ function goAdd() {
   lastAssessment = null;
   render();
 }
+function goBackFromAdd() {
+  state.view = state.addReturnView;
+  render();
+}
 function goDetail(id) {
+  state.detailReturnView = state.view === 'home' ? 'home' : 'dashboard';
   state.view = 'detail';
   state.detailId = id;
+  render();
+}
+
+function goBackFromDetail() {
+  state.view = state.detailReturnView;
+  state.detailId = null;
   render();
 }
 
@@ -440,10 +551,12 @@ function populateCategorySelect() {
 // ---------- render dispatch ----------
 
 function render() {
+  document.getElementById('view-home').style.display = state.view === 'home' ? 'block' : 'none';
   document.getElementById('view-dashboard').style.display = state.view === 'dashboard' ? 'block' : 'none';
   document.getElementById('view-add').style.display = state.view === 'add' ? 'block' : 'none';
   document.getElementById('view-detail').style.display = state.view === 'detail' ? 'block' : 'none';
   buildTabs();
+  if (state.view === 'home') renderHome();
   if (state.view === 'dashboard') renderDashboard();
   if (state.view === 'detail') renderDetail();
 }
@@ -451,14 +564,101 @@ function render() {
 function buildTabs() {
   const nav = document.getElementById('tabs');
   nav.innerHTML = '';
+  const homeButton = document.createElement('button');
+  homeButton.textContent = 'Home';
+  homeButton.className = state.view === 'home' ? 'active' : '';
+  homeButton.onclick = goHome;
+  nav.appendChild(homeButton);
   CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
-    const count = state.opportunities.filter(o => o.category === cat).length;
+    const count = state.opportunities.filter(o =>
+      o.category === cat && Boolean(o.archived) === state.showArchived
+    ).length;
     btn.innerHTML = escapeHtml(cat) + (count ? ` <span class="count">${count}</span>` : '');
     btn.className = (cat === state.activeTab && state.view === 'dashboard') ? 'active' : '';
     btn.onclick = () => { state.activeTab = cat; state.view = 'dashboard'; render(); };
     nav.appendChild(btn);
   });
+}
+
+function renderHomeList(container, records, emptyText) {
+  container.innerHTML = '';
+  if (!records.length) {
+    const empty = document.createElement('li');
+    empty.className = 'hint';
+    empty.textContent = emptyText;
+    container.appendChild(empty);
+    return;
+  }
+  records.forEach(({ opportunity, meta }) => {
+    const item = document.createElement('li');
+    const text = document.createElement('div');
+    const title = document.createElement('span');
+    title.className = 'home-item-title';
+    title.textContent = opportunity.fields.title || '(untitled)';
+    const details = document.createElement('span');
+    details.className = 'home-item-meta';
+    details.textContent = meta;
+    text.append(title, details);
+    const button = document.createElement('button');
+    button.className = 'ghost';
+    button.type = 'button';
+    button.textContent = 'Open';
+    button.onclick = () => goDetail(opportunity.id);
+    item.append(text, button);
+    container.appendChild(item);
+  });
+}
+
+function renderHome() {
+  document.getElementById('home-add-btn').onclick = goAdd;
+  const active = state.opportunities.filter(isActiveOpportunity);
+  const upcoming = active.filter(o => {
+    const schema = CATEGORY_SCHEMAS[o.category];
+    return schema && deadlineGroup(o.fields[schema.deadlineKey]) === 'upcoming';
+  }).sort((a, b) => parseDeadline(a.fields[CATEGORY_SCHEMAS[a.category].deadlineKey]) -
+    parseDeadline(b.fields[CATEGORY_SCHEMAS[b.category].deadlineKey]));
+  const ideas = active.filter(o => {
+    const workspace = o.workspace || {};
+    return Boolean((workspace.idea || '').trim() || (workspace.plan || '').trim() ||
+      (workspace.tasks || []).length || ['Drafting', 'Not Started', 'Awaiting Clarification'].includes(o.fields.action));
+  });
+  const openTasks = active.flatMap(opportunity =>
+    ((opportunity.workspace && opportunity.workspace.tasks) || [])
+      .filter(task => !task.done)
+      .map(task => ({ opportunity, task }))
+  ).sort((a, b) => (a.task.dueDate || '9999-12-31').localeCompare(b.task.dueDate || '9999-12-31'));
+  const activeIdeas = ideas.map(opportunity => ({
+    opportunity,
+    meta: (opportunity.workspace && opportunity.workspace.idea || '').trim() ||
+      opportunity.fields.action || 'Idea workspace started',
+  }));
+  const nextActions = openTasks.length
+    ? openTasks.slice(0, 5).map(({ opportunity, task }) => ({
+        opportunity,
+        meta: task.text + (task.dueDate ? ` · Due ${task.dueDate}` : ''),
+      }))
+    : ideas.slice(0, 5).map(opportunity => ({
+        opportunity,
+        meta: 'Add your next step in this workspace',
+      }));
+
+  document.getElementById('home-metrics').innerHTML = [
+    ['Active opportunities', active.length],
+    ['Upcoming deadlines', upcoming.length],
+    ['Active ideas', ideas.length],
+  ].map(([label, count]) => `<div class="home-metric"><b>${count}</b><span>${label}</span></div>`).join('');
+  const deadlineMeta = (opportunity) => {
+    const schema = CATEGORY_SCHEMAS[opportunity.category];
+    return opportunity.fields[schema.deadlineKey] || 'Deadline not specified';
+  };
+  renderHomeList(document.getElementById('home-upcoming'),
+    upcoming.slice(0, 5).map(opportunity => ({ opportunity, meta: deadlineMeta(opportunity) })),
+    'No deadlines in the next 60 days.');
+  renderHomeList(document.getElementById('home-next-actions'), nextActions,
+    'No open tasks yet. Open an opportunity and add a next step.');
+  renderHomeList(document.getElementById('home-active-ideas'), activeIdeas.slice(0, 5),
+    'No active ideas yet. Open an opportunity to start developing one.');
 }
 
 // ---------- dashboard ----------
@@ -504,6 +704,28 @@ function thBtn(label, col, width) {
   return `<th style="width:${width};cursor:pointer;user-select:none" onclick="setSort('${col}')">${escapeHtml(label)}${sortArrow(col)}</th>`;
 }
 
+function statusFilterGroup(status) {
+  const normalized = String(status || '').toLowerCase().replace(/[^a-z]/g, '');
+  const successful = normalized.includes('successful') || normalized.includes('succesful');
+  if (!successful) return null;
+  return normalized.includes('not') || normalized.startsWith('un')
+    ? 'Not Successful'
+    : 'Successful';
+}
+
+function matchesStatusFilter(status, filter) {
+  if (filter === 'all') return true;
+  if (filter === 'successful' || filter === 'not-successful') {
+    const group = statusFilterGroup(status);
+    return filter === 'successful' ? group === 'Successful' : group === 'Not Successful';
+  }
+  return filter.startsWith('status:') && (status || 'Pending').trim() === filter.slice('status:'.length);
+}
+
+function matchesAssessmentFilter(opportunity, filter) {
+  return filter === 'all' || Boolean(opportunity.assessment) === (filter === 'assessed');
+}
+
 window.setSort = function(col) {
   if (sortState.col === col) {
     sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
@@ -518,18 +740,70 @@ function renderDashboard() {
   const schema = CATEGORY_SCHEMAS[state.activeTab];
   document.getElementById('tab-heading').textContent = state.activeTab;
 
-  const records = state.opportunities.filter(o => o.category === state.activeTab);
+  const archiveToggle = document.getElementById('archive-toggle');
+  const archivedCount = state.opportunities.filter(o => o.archived).length;
+  const activeCount = state.opportunities.filter(o => !o.archived).length;
+  archiveToggle.textContent = state.showArchived
+    ? `Show active (${activeCount})`
+    : `Show archived (${archivedCount})`;
+  archiveToggle.setAttribute('aria-pressed', String(state.showArchived));
+  archiveToggle.onclick = () => {
+    state.showArchived = !state.showArchived;
+    state.statusFilter = 'all';
+    render();
+  };
+
+  const categoryRecords = state.opportunities.filter(o =>
+    o.category === state.activeTab && Boolean(o.archived) === state.showArchived
+  );
+  const records = categoryRecords.filter(o =>
+    matchesStatusFilter(o.fields.status, state.statusFilter) &&
+    (state.deadlineFilter === 'all' ||
+      (isPendingOpportunity(o) && deadlineGroup(o.fields[schema.deadlineKey]) === state.deadlineFilter)) &&
+    matchesAssessmentFilter(o, state.assessmentFilter)
+  );
 
   // status counts
-  const counts = {};
-  records.forEach(o => {
+  const counts = new Map();
+  categoryRecords.forEach(o => {
     const out = (o.fields.status || 'Pending').trim();
-    counts[out] = (counts[out] || 0) + 1;
+    counts.set(out, (counts.get(out) || 0) + 1);
   });
   const countsBar = document.getElementById('counts-bar');
-  countsBar.innerHTML = `<span class="count-chip"><b>${records.length}</b> total</span>` +
-    Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([k,v]) =>
-      `<span class="count-chip">${escapeHtml(k)} <b>${v}</b></span>`).join('');
+  const successfulCount = categoryRecords.filter(o => statusFilterGroup(o.fields.status) === 'Successful').length;
+  const unsuccessfulCount = categoryRecords.filter(o => statusFilterGroup(o.fields.status) === 'Not Successful').length;
+  countsBar.innerHTML = '';
+  const addFilterTab = (filter, label, count, active, onSelect) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `count-chip${active ? ' active' : ''}`;
+    button.setAttribute('aria-pressed', String(active));
+    button.append(document.createTextNode(`${label} `));
+    const countElement = document.createElement('b');
+    countElement.textContent = count;
+    button.appendChild(countElement);
+    button.onclick = onSelect;
+    countsBar.appendChild(button);
+  };
+  addFilterTab('all', 'All', categoryRecords.length, state.statusFilter === 'all',
+    () => window.setStatusFilter('all'));
+  addFilterTab('upcoming', 'Upcoming', categoryRecords.filter(o =>
+    isPendingOpportunity(o) && deadlineGroup(o.fields[schema.deadlineKey]) === 'upcoming'
+  ).length, state.deadlineFilter === 'upcoming', () => window.setDeadlineFilter('upcoming'));
+  addFilterTab('assessed', 'Assessed', categoryRecords.filter(o => Boolean(o.assessment)).length,
+    state.assessmentFilter === 'assessed', () => window.setAssessmentFilter('assessed'));
+  addFilterTab('no-assessment', 'No assessment on file',
+    categoryRecords.filter(o => !o.assessment).length,
+    state.assessmentFilter === 'no-assessment', () => window.setAssessmentFilter('no-assessment'));
+  addFilterTab('successful', 'Successful', successfulCount, state.statusFilter === 'successful',
+    () => window.setStatusFilter('successful'));
+  addFilterTab('not-successful', 'Not Successful', unsuccessfulCount, state.statusFilter === 'not-successful',
+    () => window.setStatusFilter('not-successful'));
+  [...counts.entries()].sort((a, b) => b[1] - a[1]).forEach(([status, count]) => {
+    if (statusFilterGroup(status)) return;
+    const filter = `status:${status}`;
+    addFilterTab(filter, status, count, state.statusFilter === filter, () => window.setStatusFilter(filter));
+  });
 
   // table head with sort arrows
   const headRow = document.getElementById('table-head-row');
@@ -548,6 +822,31 @@ function renderDashboard() {
 
   const table = document.getElementById('table');
   const empty = document.getElementById('empty-state');
+  const emptyGlyph = document.getElementById('empty-glyph');
+  const emptyMessage = document.getElementById('empty-message');
+  if (sorted.length > 0) {
+    emptyGlyph.textContent = '';
+    emptyMessage.textContent = '';
+  } else if (state.assessmentFilter !== 'all') {
+    emptyGlyph.textContent = 'no matching opportunities';
+    const assessmentLabel = state.assessmentFilter === 'assessed' ? 'assessed' : 'without an assessment';
+    emptyMessage.textContent = `There are no ${assessmentLabel} opportunities matching the current filters.`;
+  } else if (state.deadlineFilter === 'upcoming') {
+    emptyGlyph.textContent = 'no matching opportunities';
+    emptyMessage.textContent = 'There are no pending opportunities with upcoming deadlines matching the current filters.';
+  } else if (state.statusFilter !== 'all') {
+    emptyGlyph.textContent = 'no matching opportunities';
+    const filterLabel = state.statusFilter === 'successful' ? 'successful'
+      : state.statusFilter === 'not-successful' ? 'not successful'
+      : state.statusFilter.slice('status:'.length);
+    emptyMessage.textContent = `There are no ${filterLabel} opportunities in this category.`;
+  } else if (state.showArchived) {
+    emptyGlyph.textContent = 'nothing archived yet';
+    emptyMessage.textContent = 'Archived opportunities will appear here.';
+  } else {
+    emptyGlyph.textContent = 'nothing logged yet';
+    emptyMessage.textContent = 'Log the first opportunity in this category.';
+  }
   if (sorted.length === 0) { table.style.display = 'none'; empty.style.display = 'block'; }
   else { table.style.display = ''; empty.style.display = 'none'; }
 
@@ -569,20 +868,37 @@ function renderDashboard() {
         <td><span class="outcome-text">${escapeHtml(f.status || '-')}</span></td>
         <td class="mono" style="font-size:12.5px">${escapeHtml(extraVal || '-')}</td>
         <td class="mono" style="font-size:11px; color:var(--ink-soft)">${escapeHtml(o.logged_date || '-')}</td>
-        <td><button class="ghost" style="padding:5px 9px" onclick="deleteRow('${o.id}')" title="Delete">&times;</button></td>
+        <td><button class="ghost" style="padding:5px 9px" onclick="${state.showArchived ? 'restoreRow' : 'archiveRow'}('${o.id}')">${state.showArchived ? 'Restore' : 'Archive'}</button></td>
       </tr>
     `;
   }).join('');
 }
 
-window.deleteRow = function(id) {
+window.setStatusFilter = function(filter) {
+  state.statusFilter = filter;
+  renderDashboard();
+};
+
+window.setDeadlineFilter = function(filter) {
+  state.deadlineFilter = state.deadlineFilter === filter ? 'all' : filter;
+  renderDashboard();
+};
+
+window.setAssessmentFilter = function(filter) {
+  state.assessmentFilter = state.assessmentFilter === filter ? 'all' : filter;
+  renderDashboard();
+};
+
+function setArchived(id, archived) {
   const rec = state.opportunities.find(o => o.id === id);
   if (!rec) return;
-  if (!confirm('Remove "' + rec.fields.title + '" from the log?')) return;
-  state.opportunities = state.opportunities.filter(o => o.id !== id);
+  rec.archived = archived;
   saveData();
   render();
-};
+}
+
+window.archiveRow = id => setArchived(id, true);
+window.restoreRow = id => setArchived(id, false);
 window.goDetail = goDetail;
 
 // ---------- detail page ----------
@@ -592,12 +908,148 @@ const ACTION_OPTIONS = ['Not Started', 'Drafting', 'Submitted', 'Withdrawn',
   'Deferred (Later Cycle)', 'Declined to Pursue (Outcome - Apply)', 'Awaiting Clarification'];
 const STATUS_OPTIONS = ['Pending', 'Successful', 'Not Successful', 'Missed Deadline', 'Expired', 'Not Pursued'];
 
+function getWorkspace(rec) {
+  if (!rec.workspace || typeof rec.workspace !== 'object') {
+    rec.workspace = { idea: '', plan: '', notes: '', tasks: [], materials: [] };
+  }
+  const workspace = rec.workspace;
+  workspace.idea = typeof workspace.idea === 'string' ? workspace.idea : '';
+  workspace.plan = typeof workspace.plan === 'string' ? workspace.plan : '';
+  workspace.notes = typeof workspace.notes === 'string' ? workspace.notes : '';
+  workspace.tasks = Array.isArray(workspace.tasks) ? workspace.tasks : [];
+  workspace.materials = Array.isArray(workspace.materials) ? workspace.materials : [];
+  return workspace;
+}
+
+function renderWorkspaceLists(workspace) {
+  const taskList = document.getElementById('workspace-tasks');
+  taskList.innerHTML = '';
+  if (!workspace.tasks.length) {
+    taskList.innerHTML = '<li class="hint">No tasks yet. Add a concrete next step.</li>';
+  } else {
+    workspace.tasks.forEach((task, index) => {
+      const item = document.createElement('li');
+      item.className = `workspace-task${task.done ? ' done' : ''}`;
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = Boolean(task.done);
+      checkbox.setAttribute('aria-label', `Mark ${task.text || 'task'} ${task.done ? 'incomplete' : 'complete'}`);
+      checkbox.onchange = () => {
+        task.done = checkbox.checked;
+        item.classList.toggle('done', task.done);
+        checkbox.setAttribute('aria-label', `Mark ${task.text || 'task'} ${task.done ? 'incomplete' : 'complete'}`);
+        saveData();
+      };
+      const text = document.createElement('span');
+      text.textContent = `${task.text || 'Untitled task'}${task.dueDate ? ` · Due ${task.dueDate}` : ''}`;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ghost';
+      remove.textContent = 'Remove';
+      remove.onclick = () => {
+        workspace.tasks.splice(index, 1);
+        saveData();
+        renderWorkspaceLists(workspace);
+      };
+      item.append(checkbox, text, remove);
+      taskList.appendChild(item);
+    });
+  }
+
+  const materialList = document.getElementById('workspace-materials');
+  materialList.innerHTML = '';
+  if (!workspace.materials.length) {
+    materialList.innerHTML = '<li class="hint">No related materials added yet.</li>';
+  } else {
+    workspace.materials.forEach((material, index) => {
+      const item = document.createElement('li');
+      item.className = 'workspace-material';
+      const link = document.createElement('a');
+      link.href = material.url;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      link.textContent = material.title || material.url;
+      const remove = document.createElement('button');
+      remove.type = 'button';
+      remove.className = 'ghost';
+      remove.textContent = 'Remove';
+      remove.onclick = () => {
+        workspace.materials.splice(index, 1);
+        saveData();
+        renderWorkspaceLists(workspace);
+      };
+      item.append(link, remove);
+      materialList.appendChild(item);
+    });
+  }
+}
+
+function bindWorkspace(rec) {
+  const workspace = getWorkspace(rec);
+  [['workspace-idea', 'idea'], ['workspace-plan', 'plan'], ['workspace-notes', 'notes']]
+    .forEach(([id, key]) => {
+      const input = document.getElementById(id);
+      input.value = workspace[key];
+      input.oninput = () => {
+        workspace[key] = input.value;
+        saveData();
+      };
+    });
+  renderWorkspaceLists(workspace);
+
+  document.getElementById('workspace-add-task').onclick = () => {
+    const text = document.getElementById('workspace-task-input');
+    const dueDate = document.getElementById('workspace-task-date');
+    const error = document.getElementById('workspace-task-error');
+    if (!text.value.trim()) {
+      error.textContent = 'Enter a task before adding it.';
+      text.focus();
+      return;
+    }
+    workspace.tasks.push({ text: text.value.trim(), dueDate: dueDate.value, done: false });
+    text.value = '';
+    dueDate.value = '';
+    error.textContent = '';
+    saveData();
+    renderWorkspaceLists(workspace);
+  };
+  document.getElementById('workspace-task-input').oninput = () => {
+    document.getElementById('workspace-task-error').textContent = '';
+  };
+
+  document.getElementById('workspace-add-material').onclick = () => {
+    const title = document.getElementById('workspace-material-title');
+    const urlInput = document.getElementById('workspace-material-url');
+    const error = document.getElementById('workspace-material-error');
+    let url;
+    try {
+      url = new URL(urlInput.value.trim());
+    } catch (e) {
+      error.textContent = 'Enter a valid http or https link.';
+      urlInput.focus();
+      return;
+    }
+    if (!['http:', 'https:'].includes(url.protocol)) {
+      error.textContent = 'Only http and https links can be added.';
+      urlInput.focus();
+      return;
+    }
+    workspace.materials.push({ title: title.value.trim(), url: url.href });
+    title.value = '';
+    urlInput.value = '';
+    error.textContent = '';
+    saveData();
+    renderWorkspaceLists(workspace);
+  };
+}
+
 function renderDetail() {
   const rec = state.opportunities.find(o => o.id === state.detailId);
   const container = document.getElementById('view-detail');
   if (!rec) { container.innerHTML = '<p>Not found.</p>'; return; }
   const schema = CATEGORY_SCHEMAS[rec.category];
   const f = rec.fields;
+  const workspace = getWorkspace(rec);
   const provider = schema.orgKey ? f[schema.orgKey] : null;
 
   const fieldRows = schema.fields
@@ -652,7 +1104,7 @@ function renderDetail() {
 
   container.innerHTML = `
     <div class="page-header">
-      <button class="back-link" onclick="goDashboard()">&larr; Back to dashboard</button>
+      <button class="back-link" onclick="goBackFromDetail()">&larr; Back to ${state.detailReturnView === 'home' ? 'command center' : 'dashboard'}</button>
     </div>
     <div class="detail-header">
       <div class="detail-title">${escapeHtml(f[schema.titleKey] || '(untitled)')}</div>
@@ -672,13 +1124,50 @@ function renderDetail() {
       <select class="outcome-select" id="status-select"></select>
     </div>
     <div class="detail-grid">${fieldRows}</div>
+    <h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Opportunity workspace</h3>
+    <p class="hint">Develop the idea and plan, track next steps, keep notes, and collect related links. Changes save in this browser.</p>
+    <div class="workspace-grid">
+      <section class="workspace-section">
+        <h3>Idea</h3>
+        <textarea id="workspace-idea" placeholder="What could this opportunity make possible?"></textarea>
+      </section>
+      <section class="workspace-section">
+        <h3>Plan</h3>
+        <textarea id="workspace-plan" placeholder="Outline your approach, partners, and milestones."></textarea>
+      </section>
+      <section class="workspace-section">
+        <h3>Tasks and next steps</h3>
+        <ul class="home-list" id="workspace-tasks"></ul>
+        <div class="workspace-add-row">
+          <input type="text" id="workspace-task-input" placeholder="Add a concrete next step" />
+          <input type="date" id="workspace-task-date" aria-label="Task due date" />
+          <button class="ghost" id="workspace-add-task" type="button">Add task</button>
+        </div>
+        <p class="hint" id="workspace-task-error" role="status"></p>
+      </section>
+      <section class="workspace-section">
+        <h3>Related materials</h3>
+        <ul class="home-list" id="workspace-materials"></ul>
+        <div class="workspace-add-row">
+          <input type="text" id="workspace-material-title" placeholder="Link title (optional)" />
+          <input type="url" id="workspace-material-url" placeholder="https://..." />
+          <button class="ghost" id="workspace-add-material" type="button">Add link</button>
+        </div>
+        <p class="hint" id="workspace-material-error" role="status"></p>
+      </section>
+      <section class="workspace-section">
+        <h3>Notes</h3>
+        <textarea id="workspace-notes" placeholder="Capture research, questions, and meeting notes."></textarea>
+      </section>
+    </div>
     <h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Assessment</h3>
     ${assessmentHtml}
     <div class="form-actions" style="margin-top:20px;">
-      <button class="danger" onclick="deleteFromDetail('${rec.id}')">Delete this entry</button>
+      <button class="ghost" onclick="setArchived('${rec.id}', ${!rec.archived})">${rec.archived ? 'Restore this entry' : 'Archive this entry'}</button>
     </div>
   `;
 
+  bindWorkspace(rec);
   const actionSel = document.getElementById('action-select');
   const actionOpts = ACTION_OPTIONS.includes(f.action) ? ACTION_OPTIONS : (f.action ? [f.action, ...ACTION_OPTIONS] : ACTION_OPTIONS);
   actionSel.innerHTML = actionOpts.map(o => `<option value="${escapeHtml(o)}" ${f.action===o?'selected':''}>${escapeHtml(o)}</option>`).join('');
@@ -691,14 +1180,6 @@ function renderDetail() {
 }
 
 window.goDashboard = goDashboard;
-window.deleteFromDetail = function(id) {
-  const rec = state.opportunities.find(o => o.id === id);
-  if (!rec) return;
-  if (!confirm('Remove "' + rec.fields.title + '" from the log?')) return;
-  state.opportunities = state.opportunities.filter(o => o.id !== id);
-  saveData();
-  goDashboard();
-};
 
 // ---------- add / assess flow ----------
 
@@ -751,7 +1232,7 @@ document.getElementById('input-file').addEventListener('change', async (e) => {
 });
 
 document.getElementById('add-btn').onclick = goAdd;
-document.getElementById('back-from-add').onclick = goDashboard;
+document.getElementById('back-from-add').onclick = goBackFromAdd;
 
 async function callApi(prompt) {
   const response = await fetch("/api/assess", {
@@ -1063,7 +1544,14 @@ function csvEscape(val) {
 
 function exportCSV() {
   const schema = CATEGORY_SCHEMAS[state.activeTab];
-  const records = state.opportunities.filter(o => o.category === state.activeTab);
+  const records = state.opportunities.filter(o =>
+    o.category === state.activeTab &&
+    Boolean(o.archived) === state.showArchived &&
+    matchesStatusFilter(o.fields.status, state.statusFilter) &&
+    (state.deadlineFilter === 'all' ||
+      (isPendingOpportunity(o) && deadlineGroup(o.fields[schema.deadlineKey]) === state.deadlineFilter)) &&
+    matchesAssessmentFilter(o, state.assessmentFilter)
+  );
   const columns = [...schema.fields.filter(([k]) => k !== 'outcome'), ['outcome', 'Outcome'], ['action', 'Action'], ['status', 'Status']];
   const headerRow = columns.map(([, label]) => csvEscape(label)).join(',');
   const rows = records.map(r => columns.map(([key]) => csvEscape(r.fields[key])).join(','));
