@@ -117,6 +117,9 @@ button.count-chip:hover, button.count-chip:focus-visible { border-color: var(--s
 button.count-chip.active { background: var(--sea-mid); border-color: var(--sea-mid); color: white; }
 button.count-chip.active b { color: white; }
 
+.action-bar { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.table-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+
 /* Weekly Scan tab */
 table.scan-table { table-layout: fixed; }
 .scan-table td.scan-deadline { font-size: 12.5px; white-space: normal; overflow-wrap: break-word; }
@@ -281,7 +284,6 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 <header>
   <h1>Opportunity Log</h1>
   <div class="subtitle">Grants, fellowships, consultancies and every other call worth tracking, assessed on entry and sorted by deadline.</div>
-  <button class="ghost" id="cloud-sync-toggle" type="button" aria-expanded="false">Cloud sync: not connected</button>
 </header>
 
 <nav class="tabs" id="tabs"></nav>
@@ -302,10 +304,13 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 
 <main id="app">
 
+  <div class="action-bar" id="action-bar">
+    <button class="primary" id="weekly-scan-btn" type="button">Weekly Scan</button>
+    <button class="primary" id="add-btn" type="button">+ Log opportunity</button>
+    <button class="primary" id="cloud-sync-toggle" type="button" aria-expanded="false">Cloud sync: not connected</button>
+  </div>
+
   <div id="view-home" style="display:none">
-    <div class="toolbar home-toolbar">
-      <button class="primary" id="home-add-btn" type="button">+ Log opportunity</button>
-    </div>
     <p class="home-intro">Deadlines, next steps, and ideas in progress across your opportunities.</p>
     <div class="home-cards">
       <div class="home-metrics" id="home-metrics"></div>
@@ -329,12 +334,6 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
   <div id="view-dashboard">
     <div class="toolbar">
       <h2 id="tab-heading">Grants &amp; Fellowships</h2>
-      <div style="display:flex; gap:10px;">
-        <button class="ghost" id="archive-toggle" type="button"></button>
-        <button class="ghost" id="csv-btn">Download CSV</button>
-        <button class="ghost" id="snapshot-btn">Download standalone copy</button>
-        <button class="primary" id="add-btn">+ Log opportunity</button>
-      </div>
     </div>
     <div class="counts-bar" id="counts-bar"></div>
     <table id="table">
@@ -344,6 +343,11 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
     <div class="empty" id="empty-state" style="display:none">
       <span class="glyph" id="empty-glyph">nothing logged yet</span>
       <span id="empty-message">Log the first opportunity in this category.</span>
+    </div>
+    <div class="table-actions">
+      <button class="primary" id="archive-toggle" type="button"></button>
+      <button class="primary" id="csv-btn" type="button">Download CSV</button>
+      <button class="primary" id="snapshot-btn" type="button">Download standalone copy</button>
     </div>
   </div>
 
@@ -929,6 +933,7 @@ function render() {
   document.getElementById('view-add').style.display = state.view === 'add' ? 'block' : 'none';
   document.getElementById('view-detail').style.display = state.view === 'detail' ? 'block' : 'none';
   document.getElementById('view-scan').style.display = state.view === 'scan' ? 'block' : 'none';
+  document.getElementById('action-bar').style.display = ['home', 'dashboard', 'scan'].includes(state.view) ? 'flex' : 'none';
   buildTabs();
   if (state.view === 'home') renderHome();
   if (state.view === 'dashboard') renderDashboard();
@@ -954,11 +959,6 @@ function buildTabs() {
     btn.onclick = () => { state.activeTab = cat; state.view = 'dashboard'; render(); };
     nav.appendChild(btn);
   });
-  const scanButton = document.createElement('button');
-  scanButton.textContent = 'Weekly Scan';
-  scanButton.className = state.view === 'scan' ? 'active' : '';
-  scanButton.onclick = goScan;
-  nav.appendChild(scanButton);
 }
 
 function renderHomeList(container, records, emptyText) {
@@ -991,8 +991,7 @@ function renderHomeList(container, records, emptyText) {
 }
 
 function renderHome() {
-  document.getElementById('home-add-btn').onclick = goAdd;
-  const active = state.opportunities.filter(isActiveOpportunity);
+    const active = state.opportunities.filter(isActiveOpportunity);
   const upcoming = active.filter(o => {
     const schema = CATEGORY_SCHEMAS[o.category];
     return schema && deadlineGroup(o.fields[schema.deadlineKey]) === 'upcoming';
@@ -1733,6 +1732,7 @@ document.getElementById('input-file').addEventListener('change', async (e) => {
 });
 
 document.getElementById('add-btn').onclick = goAdd;
+document.getElementById('weekly-scan-btn').onclick = goScan;
 document.getElementById('back-from-add').onclick = goBackFromAdd;
 
 function apiRequestError(message) {
