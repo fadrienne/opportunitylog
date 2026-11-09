@@ -1179,7 +1179,7 @@ function renderDetail() {
         <textarea id="workspace-notes" placeholder="Capture research, questions, and meeting notes."></textarea>
       </section>
     </div>
-    <h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Assessment</h3>
+    ${assessmentHtml ? `<h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Assessment</h3>` : ''}
     ${assessmentHtml}
     <div class="form-actions" style="margin-top:20px;">
       <button class="ghost" onclick="setArchived('${rec.id}', ${!rec.archived})">${rec.archived ? 'Restore this entry' : 'Archive this entry'}</button>
@@ -1381,7 +1381,7 @@ async function callApi(prompt, allowWebSearch = false) {
   if (textBlocks.length === 0) {
     throw new Error(
       'The API returned no text. stop_reason: "' + stop + '", content types: [' + contentTypes + ']. ' +
-      (stop === 'end_turn' ? 'Try pasting the opportunity details directly into the Details field.' : '')
+      (stop === 'end_turn' ? 'Try pasting the opportunity details directly into the Details field, or verify the opportunity page is publicly accessible.' : '')
     );
   }
   let raw = textBlocks.join('\n').trim().replace(/```json/g, '').replace(/```/g, '').trim();
@@ -1543,14 +1543,16 @@ four stages internally (eligibility check, criteria extraction, profile mapping,
 summary) and return the complete result in one response. Be strict: do not inflate
 weak alignment to moderate, and do not use generic language like "passionate about"
 or "unique opportunity." Extract only facts explicitly present in the source;
-do not invent facts or guess an exchange rate. Return all fields in one response.
+do not invent facts or guess an exchange rate. If the details are not pasted,
+use the single available web search to open the supplied URL and find its official listing.
+Return all fields in one response.
 PROFILE ANCHORS:
 ${PROFILE_ANCHORS}
 
 URL: ${url}
 CATEGORY: ${category}
 PASTED DETAILS FROM THE PAGE:
-${snippet || '(No details pasted. Use the single available web search to open the supplied URL and find the official opportunity listing. If it cannot be accessed or verified, say so clearly and do not invent facts.)'}
+${snippet || '(No details pasted. Find the official opportunity listing at the URL above. If it cannot be accessed or verified, say so clearly and do not invent facts.)'}
 
 Return ONLY valid JSON, no preamble, matching this exact shape:
 {
