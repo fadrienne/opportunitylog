@@ -1,5 +1,15 @@
 export const config = { runtime: 'edge' };
 
+function jsonResponse(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
+}
+
 export default async function handler(req) {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
@@ -12,15 +22,14 @@ export default async function handler(req) {
   }
 
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405 });
+    return jsonResponse({ error: { message: 'Method not allowed' } }, 405);
   }
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
-    return new Response(
-      JSON.stringify({ error: { message: 'ANTHROPIC_API_KEY environment variable is not set in Vercel.' } }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
-    );
+    return jsonResponse({
+      error: { message: 'ANTHROPIC_API_KEY environment variable is not set in Vercel.' },
+    }, 500);
   }
 
   const body = await req.text();
@@ -36,12 +45,15 @@ export default async function handler(req) {
   });
 
   const data = await upstream.text();
-
-  return new Response(data, {
-    status: upstream.status,
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+  let payload;
+  try {
+    payload = JSON.parse(data);
+  } catch (e) {
+    payload = {
+      error: {
+        message: `Anthropic returned a non-JSON response (HTTP ${upstream.status}): ${data.trim().slice(0, 240) || 'Empty response.'}`,
+      },
+    };
+  }
+  return jsonResponse(payload, upstream.status);
 }

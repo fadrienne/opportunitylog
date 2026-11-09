@@ -28,6 +28,10 @@ You can do this through GitHub's web interface: click "Add file" → "Upload fil
 3. Click Save.
 4. Go to Deployments → click the three dots on the latest deployment → "Redeploy". This picks up the new environment variable.
 
+## If assessment returns "Forbidden"
+
+The assessment runs through `/api/assess` on Vercel, so opening a downloaded HTML file directly (`file:///...`) will not work. Open the dashboard using its Vercel project URL. For local development, run the project with `vercel dev`. If the request still returns HTTP 403 on Vercel, check the deployment's **Deployment Protection** and **Firewall** settings. If the deployment is intentionally protected, sign in or use the authorized production URL; do not make a protected deployment public just to bypass the error.
+
 ## Done
 
 Your dashboard is live at the Vercel URL. Open it on any device, any browser.

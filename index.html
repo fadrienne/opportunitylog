@@ -1238,20 +1238,56 @@ document.getElementById('input-file').addEventListener('change', async (e) => {
 document.getElementById('add-btn').onclick = goAdd;
 document.getElementById('back-from-add').onclick = goBackFromAdd;
 
+function apiRequestError(message) {
+  const error = new Error(message);
+  error.apiRequestFailure = true;
+  return error;
+}
+
 async function callApi(prompt) {
-  const response = await fetch("/api/assess", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 4000,
-      messages: [{ role: "user", content: prompt }],
-      tools: [{ type: "web_search_20250305", name: "web_search" }]
-    })
-  });
-  const data = await response.json();
+  if (window.location.protocol === 'file:') {
+    throw apiRequestError(
+      'The assessment API is not available when this HTML file is opened directly. Open the dashboard using its Vercel URL, or run the project locally with `vercel dev`.'
+    );
+  }
+  let response;
+  try {
+    response = await fetch("/api/assess", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 4000,
+        messages: [{ role: "user", content: prompt }],
+        tools: [{ type: "web_search_20250305", name: "web_search" }]
+      })
+    });
+  } catch (e) {
+    throw apiRequestError(`Could not reach the assessment endpoint: ${e.message}`);
+  }
+  const responseText = await response.text();
+  let data;
+  try {
+    data = JSON.parse(responseText);
+  } catch (e) {
+    const body = responseText.trim().slice(0, 240);
+    if (response.status === 403 && /^forbidden\b/i.test(body)) {
+      throw apiRequestError(
+        'The assessment endpoint returned HTTP 403 (Forbidden). Open the dashboard using its Vercel project URL. If you already are, check the deployment’s Protection and Firewall settings.'
+      );
+    }
+    throw apiRequestError(
+      `The assessment endpoint returned a non-JSON response (HTTP ${response.status}${response.statusText ? ' ' + response.statusText : ''}). ` +
+      (body ? `Response: ${body}` : 'The response body was empty.')
+    );
+  }
+  if (!response.ok && !data.error) {
+    throw apiRequestError(`Assessment request failed with HTTP ${response.status}: ${JSON.stringify(data)}`);
+  }
   if (data.error) {
-    throw new Error('API error ' + response.status + ': ' + JSON.stringify(data.error));
+    const error = new Error('API error ' + response.status + ': ' + JSON.stringify(data.error));
+    error.apiRequestFailure = !response.ok;
+    throw error;
   }
   const stop = data.stop_reason || 'unknown';
   const contentTypes = (data.content || []).map(b => b.type).join(', ') || 'empty';
@@ -1280,7 +1316,7 @@ async function callApi(prompt) {
   }
 }
 
-document.getElementById('assess-btn').onclick = async () => {
+async function runAssessment() {
   const url = document.getElementById('input-url').value.trim();
   const snippet = document.getElementById('input-snippet').value.trim();
   const category = document.getElementById('input-category').value;
@@ -1302,6 +1338,15 @@ document.getElementById('assess-btn').onclick = async () => {
     statusEl.textContent = 'Stage 0: extracting opportunity details...';
     s0 = await callApi(buildStage0Prompt(url, snippet));
   } catch (e) {
+    if (e.apiRequestFailure) {
+      console.error(e);
+      statusEl.className = 'stage-status visible error';
+      statusEl.textContent = `Stage 0 extraction failed: ${e.message}`;
+      btn.textContent = 'Run assessment';
+      btn.disabled = false;
+      btn.onclick = runAssessment;
+      return;
+    }
     console.warn('Stage 0 extraction failed, continuing with empty fields:', e.message);
   }
 
@@ -1348,11 +1393,11 @@ document.getElementById('assess-btn').onclick = async () => {
     statusEl.textContent = e.message;
     btn.textContent = 'Run assessment';
     btn.disabled = false;
-    btn.onclick = null; // reset so next click re-runs the full handler
-    // re-attach the handler by reloading it cleanly
-    document.getElementById('assess-btn').onclick = arguments.callee;
+    btn.onclick = runAssessment;
   }
-};
+}
+
+document.getElementById('assess-btn').onclick = runAssessment;
 
 function renderStage0Summary(s0) {
   const fields = [
