@@ -32,7 +32,16 @@ export default async function handler(req) {
     }, 500);
   }
 
-  const body = await req.text();
+  let requestBody;
+  try {
+    requestBody = JSON.parse(await req.text());
+  } catch (e) {
+    return jsonResponse({ error: { message: 'Request body must be valid JSON.' } }, 400);
+  }
+  if (!requestBody || typeof requestBody !== 'object' || Array.isArray(requestBody)) {
+    return jsonResponse({ error: { message: 'Request body must be a JSON object.' } }, 400);
+  }
+  requestBody.stream = true;
 
   const upstream = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -41,19 +50,35 @@ export default async function handler(req) {
       'x-api-key': apiKey,
       'anthropic-version': '2023-06-01',
     },
-    body,
+    body: JSON.stringify(requestBody),
   });
 
-  const data = await upstream.text();
-  let payload;
-  try {
-    payload = JSON.parse(data);
-  } catch (e) {
-    payload = {
-      error: {
-        message: `Anthropic returned a non-JSON response (HTTP ${upstream.status}): ${data.trim().slice(0, 240) || 'Empty response.'}`,
-      },
-    };
+  if (!upstream.ok) {
+    const data = await upstream.text();
+    let payload;
+    try {
+      payload = JSON.parse(data);
+    } catch (e) {
+      payload = {
+        error: {
+          message: `Anthropic returned a non-JSON response (HTTP ${upstream.status}): ${data.trim().slice(0, 240) || 'Empty response.'}`,
+        },
+      };
+    }
+    return jsonResponse(payload, upstream.status);
   }
-  return jsonResponse(payload, upstream.status);
+
+  if (!upstream.body) {
+    return jsonResponse({ error: { message: 'Anthropic returned an empty streaming response.' } }, 502);
+  }
+
+  return new Response(upstream.body, {
+    status: upstream.status,
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+      'Cache-Control': 'no-cache, no-transform',
+      'X-Accel-Buffering': 'no',
+      'Access-Control-Allow-Origin': '*',
+    },
+  });
 }

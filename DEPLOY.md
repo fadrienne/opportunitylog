@@ -40,8 +40,8 @@ The "Download standalone copy" button still works exactly as before — use it t
 
 ## Updating the dashboard
 
-When I send you a new version of the HTML:
-1. Replace `index.html` in your GitHub repo with the new file.
+When I send you updated files:
+1. Replace each changed file in your GitHub repo, keeping `api/assess.js` in the `api` folder.
 2. Vercel redeploys automatically within about 30 seconds.
 
-You never need to touch `api/assess.js` or `vercel.json` again unless something changes about the API.
+Assessment responses are streamed from Anthropic so Vercel can start responding before the full assessment is complete. If an assessment still returns HTTP 504, confirm the latest `index.html` and `api/assess.js` are deployed, then retry.
