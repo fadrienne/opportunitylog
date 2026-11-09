@@ -947,7 +947,7 @@ function buildTabs() {
   CATEGORIES.forEach(cat => {
     const btn = document.createElement('button');
     const count = state.opportunities.filter(o =>
-      o.category === cat && Boolean(o.archived) === state.showArchived
+      o.category === cat && !o.deleted && Boolean(o.archived) === state.showArchived
     ).length;
     btn.innerHTML = escapeHtml(cat) + (count ? ` <span class="count">${count}</span>` : '');
     btn.className = (cat === state.activeTab && state.view === 'dashboard') ? 'active' : '';
@@ -1122,8 +1122,8 @@ function renderDashboard() {
   document.getElementById('tab-heading').textContent = state.activeTab;
 
   const archiveToggle = document.getElementById('archive-toggle');
-  const archivedCount = state.opportunities.filter(o => o.archived).length;
-  const activeCount = state.opportunities.filter(o => !o.archived).length;
+  const archivedCount = state.opportunities.filter(o => o.archived && !o.deleted).length;
+  const activeCount = state.opportunities.filter(o => !o.archived && !o.deleted).length;
   archiveToggle.textContent = state.showArchived
     ? `Show active (${activeCount})`
     : `Show archived (${archivedCount})`;
@@ -1135,7 +1135,7 @@ function renderDashboard() {
   };
 
   const categoryRecords = state.opportunities.filter(o =>
-    o.category === state.activeTab && Boolean(o.archived) === state.showArchived
+    o.category === state.activeTab && !o.deleted && Boolean(o.archived) === state.showArchived
   );
   const records = categoryRecords.filter(o =>
     matchesStatusFilter(o.fields.status, state.statusFilter) &&
@@ -1249,7 +1249,7 @@ function renderDashboard() {
         <td><span class="outcome-text">${escapeHtml(f.status || '-')}</span></td>
         <td class="mono" style="font-size:12.5px">${escapeHtml(extraVal || '-')}</td>
         <td class="mono" style="font-size:11px; color:var(--ink-soft)">${escapeHtml(formatOpportunityDate(o.logged_date) || '-')}</td>
-        <td><button class="ghost" style="padding:5px 9px" onclick="${state.showArchived ? 'restoreRow' : 'archiveRow'}('${o.id}')">${state.showArchived ? 'Restore' : 'Archive'}</button></td>
+        <td><button class="ghost" style="padding:5px 9px" onclick="${state.showArchived ? 'restoreRow' : 'archiveRow'}('${o.id}')">${state.showArchived ? 'Restore' : 'Archive'}</button> <button class="ghost" style="padding:5px 9px" onclick="deleteEntry('${o.id}')">Delete</button></td>
       </tr>
     `;
   }).join('');
@@ -1278,6 +1278,21 @@ function setArchived(id, archived) {
   render();
 }
 
+function deleteEntry(id) {
+  const rec = state.opportunities.find(o => o.id === id);
+  if (!rec) return;
+  const title = (rec.fields && (rec.fields.title || rec.fields.name)) || 'this entry';
+  if (!window.confirm('Delete "' + title + '" permanently? This removes its content, including any assessment, and cannot be undone.')) return;
+  // Keep only a hidden marker so cloud sync does not bring the entry back from another browser.
+  rec.fields = {};
+  rec.assessment = null;
+  rec.deleted = true;
+  rec.archived = true;
+  saveData();
+  if (state.view === 'detail') { state.view = 'dashboard'; state.detailId = null; }
+  render();
+}
+window.deleteEntry = deleteEntry;
 window.archiveRow = id => setArchived(id, true);
 window.restoreRow = id => setArchived(id, false);
 window.goDetail = goDetail;
@@ -1574,6 +1589,7 @@ function renderDetail() {
     ${assessmentHtml}
     <div class="form-actions" style="margin-top:20px;">
       <button class="ghost" onclick="setArchived('${rec.id}', ${!rec.archived})">${rec.archived ? 'Restore this entry' : 'Archive this entry'}</button>
+      <button class="ghost" onclick="deleteEntry('${rec.id}')">Delete this entry</button>
     </div>
   `;
 
@@ -2156,7 +2172,7 @@ function exportCSV() {
   const schema = CATEGORY_SCHEMAS[state.activeTab];
   const records = state.opportunities.filter(o =>
     o.category === state.activeTab &&
-    Boolean(o.archived) === state.showArchived &&
+    !o.deleted && Boolean(o.archived) === state.showArchived &&
     matchesStatusFilter(o.fields.status, state.statusFilter) &&
     (state.deadlineFilter === 'all' ||
       (isPendingOpportunity(o) && deadlineGroup(o.fields[schema.deadlineKey]) === state.deadlineFilter)) &&
@@ -2242,10 +2258,10 @@ function scanNormUrl(u) {
 }
 function scanFindLoggedRecord(item) {
   const map = scanLoggedMap();
-  if (map[item.id] && state.opportunities.some(o => o.id === map[item.id])) return map[item.id];
+  if (map[item.id] && state.opportunities.some(o => o.id === map[item.id] && !o.deleted)) return map[item.id];
   const target = scanNormUrl(item.url);
   if (!target) return null;
-  const hit = state.opportunities.find(o => o.fields && scanNormUrl(o.fields.url) === target);
+  const hit = state.opportunities.find(o => !o.deleted && o.fields && scanNormUrl(o.fields.url) === target);
   return hit ? hit.id : null;
 }
 function scanGuessCategory(type) {
@@ -2294,6 +2310,25 @@ function logScanItem(scanId) {
   buildTabs();
 }
 
+function assessScanItem(scanId) {
+  const items = (scanState.data && scanState.data.opportunities) || [];
+  const item = items.find(i => i.id === scanId);
+  if (!item) return;
+  const category = scanState.catChoice[scanId] || scanGuessCategory(item.type);
+  state.activeTab = category;
+  goAdd();
+  state.addReturnView = 'scan';
+  document.getElementById('back-from-add').textContent = '← Back to weekly scan';
+  document.getElementById('input-url').value = item.url || '';
+  document.getElementById('input-category').value = category;
+  const status = document.getElementById('assess-status');
+  status.className = 'stage-status visible';
+  status.textContent = item.url
+    ? 'URL filled in from the weekly scan. Click "Assess fit with AI" to run the assessment, then confirm to log it.'
+    : 'This scan item has no URL. Paste its details below, then click "Assess fit with AI".';
+  if (item.url) runAssessment();
+}
+
 function openLoggedFromScan(recordId) {
   const rec = state.opportunities.find(o => o.id === recordId);
   if (!rec) return;
@@ -2332,7 +2367,7 @@ function scanActionCell(item) {
   }
   const guess = scanState.catChoice[item.id] || scanGuessCategory(item.type);
   const options = CATEGORIES.map(c => `<option value="${escapeHtml(c)}"${c === guess ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
-  return `<div class="scan-actions"><select data-scan-cat="${escapeHtml(item.id)}" aria-label="Category">${options}</select><button class="primary" type="button" data-log-scan="${escapeHtml(item.id)}">Log this</button>${link}</div>`;
+  return `<div class="scan-actions"><select data-scan-cat="${escapeHtml(item.id)}" aria-label="Category">${options}</select><button class="primary" type="button" data-assess-scan="${escapeHtml(item.id)}">Assess and log</button><button class="ghost" type="button" data-log-scan="${escapeHtml(item.id)}">Log without assessment</button>${link}</div>`;
 }
 
 function scanOpportunityCell(item, isNew) {
@@ -2402,6 +2437,7 @@ function renderScan() {
     <p class="scan-note">Snapshot exported ${escapeHtml(scanFormatStamp(scanState.data && scanState.data.exportedAt))}. Refreshed weekly into scan-data.json; reload after a redeploy to see new data.</p>`;
   root.querySelectorAll('[data-scan-tab]').forEach(el => { el.onclick = () => { scanState.tab = el.dataset.scanTab; renderScan(); }; });
   root.querySelectorAll('[data-log-scan]').forEach(el => { el.onclick = () => logScanItem(el.dataset.logScan); });
+  root.querySelectorAll('[data-assess-scan]').forEach(el => { el.onclick = () => assessScanItem(el.dataset.assessScan); });
   root.querySelectorAll('[data-open-logged]').forEach(el => { el.onclick = () => openLoggedFromScan(el.dataset.openLogged); });
   root.querySelectorAll('[data-scan-cat]').forEach(el => { el.onchange = () => { scanState.catChoice[el.dataset.scanCat] = el.value; }; });
 }
