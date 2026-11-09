@@ -346,6 +346,19 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 
     <div class="stage-status" id="assess-status"></div>
     <div class="assessment-block" id="assessment-block"></div>
+    <section class="form-panel" aria-labelledby="manual-entry-heading">
+      <h3 id="manual-entry-heading">Log without AI</h3>
+      <p class="hint">This saves directly in this browser without calling the assessment service or using API credits. You can fill in more details later.</p>
+      <label for="manual-title">Opportunity name</label>
+      <input type="text" id="manual-title" placeholder="Name of the opportunity" />
+      <label for="manual-provider">Provider / location (optional)</label>
+      <input type="text" id="manual-provider" placeholder="Organisation or location" />
+      <label for="manual-deadline">Deadline (optional)</label>
+      <input type="text" id="manual-deadline" placeholder="Date or rolling deadline" />
+      <div class="form-actions">
+        <button class="ghost" id="manual-save-btn" type="button">Save without assessment</button>
+      </div>
+    </section>
   </div>
 
   <div id="view-detail" style="display:none"></div>
@@ -512,6 +525,9 @@ function goAdd() {
   document.getElementById('input-url').value = '';
   document.getElementById('input-snippet').value = '';
   document.getElementById('input-file').value = '';
+  document.getElementById('manual-title').value = '';
+  document.getElementById('manual-provider').value = '';
+  document.getElementById('manual-deadline').value = '';
   document.getElementById('file-status').className = 'stage-status';
   document.getElementById('assess-status').className = 'stage-status';
   document.getElementById('assessment-block').className = 'assessment-block';
@@ -1313,9 +1329,8 @@ async function callApi(prompt) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
-        max_tokens: 4000,
-        messages: [{ role: "user", content: prompt }],
-        tools: [{ type: "web_search_20250305", name: "web_search" }]
+        max_tokens: 3000,
+        messages: [{ role: "user", content: prompt }]
       })
     });
   } catch (e) {
@@ -1337,7 +1352,7 @@ async function callApi(prompt) {
       }
       if (response.status === 504) {
         throw apiRequestError(
-          'The assessment request timed out at Vercel (HTTP 504). The new streaming fix may not be deployed yet; redeploy the latest changes and try again.'
+          'The assessment service timed out (HTTP 504). Do not keep retrying: a timed-out request may still use API credits. Save the opportunity without assessment below, or try again later.'
         );
       }
       throw apiRequestError(
@@ -1389,44 +1404,31 @@ async function runAssessment() {
   const block = document.getElementById('assessment-block');
   const btn = document.getElementById('assess-btn');
 
-  if (!url && !snippet) { alert('Paste a URL or some details first.'); return; }
-
+  if (!snippet) {
+    statusEl.className = 'stage-status visible error';
+    statusEl.textContent = 'Paste the opportunity details first. Assessment no longer searches the web, which avoids slow timeouts and extra API usage. You can still save the entry without AI below.';
+    return;
+  }
   btn.disabled = true;
   lastAssessment = null;
   block.className = 'assessment-block';
   block.innerHTML = '';
 
-  // ---- Stage 0: extract factual details ----
-  let s0 = {};
   try {
     statusEl.className = 'stage-status visible working';
-    statusEl.textContent = 'Stage 0: extracting opportunity details...';
-    s0 = await callApi(buildStage0Prompt(url, snippet));
-  } catch (e) {
-    if (e.apiRequestFailure) {
-      console.error(e);
-      statusEl.className = 'stage-status visible error';
-      statusEl.textContent = `Stage 0 extraction failed: ${e.message}`;
-      btn.textContent = 'Run assessment';
-      btn.disabled = false;
-      btn.onclick = runAssessment;
-      return;
-    }
-    console.warn('Stage 0 extraction failed, continuing with empty fields:', e.message);
-  }
-
-  // ---- Stage 1-4: full assessment ----
-  try {
-    statusEl.textContent = 'Running Stage 1 through 4 against the profile anchors...';
-    const parsed = await callApi(buildAssessPrompt(url, snippet, category, s0));
-
-    // merge confirmed Stage 0 values
-    parsed.title = s0.title || parsed.title;
-    parsed.provider = s0.provider || parsed.provider;
-    parsed.deadline = s0.deadline || parsed.deadline;
-    parsed.amount_original = s0.amount_original || parsed.amount_original;
-    parsed.amount_scr = s0.amount_scr || parsed.amount_scr;
-    parsed.duration = s0.duration || parsed.duration;
+    statusEl.textContent = 'Running one assessment request (web search is off to avoid extra cost and delay)...';
+    const parsed = await callApi(buildAssessPrompt(url, snippet, category));
+    const s0 = {
+      title: parsed.title,
+      provider: parsed.provider,
+      location: parsed.location,
+      date_released: parsed.date_released,
+      deadline: parsed.deadline,
+      amount_original: parsed.amount_original,
+      amount_scr: parsed.amount_scr,
+      duration: parsed.duration,
+      contract_type: parsed.contract_type,
+    };
 
     const fields = mapAssessedToFields(category, parsed, url);
     if ('date_applied' in fields) fields.date_applied = null; // left blank for user to fill later
@@ -1463,6 +1465,45 @@ async function runAssessment() {
 }
 
 document.getElementById('assess-btn').onclick = runAssessment;
+document.getElementById('manual-save-btn').onclick = saveOpportunityWithoutAssessment;
+
+function saveOpportunityWithoutAssessment() {
+  const category = document.getElementById('input-category').value;
+  const schema = CATEGORY_SCHEMAS[category];
+  const title = document.getElementById('manual-title').value.trim();
+  const statusEl = document.getElementById('assess-status');
+  if (!title) {
+    statusEl.className = 'stage-status visible error';
+    statusEl.textContent = 'Enter an opportunity name to save it without assessment.';
+    document.getElementById('manual-title').focus();
+    return;
+  }
+
+  const fields = {};
+  schema.fields.forEach(([key]) => {
+    if (key === schema.titleKey) fields[key] = title;
+    else if (key === schema.orgKey) fields[key] = document.getElementById('manual-provider').value.trim() || null;
+    else if (key === schema.deadlineKey) fields[key] = document.getElementById('manual-deadline').value.trim() || null;
+    else if (key === 'url') fields[key] = document.getElementById('input-url').value.trim() || null;
+    else if (key === 'description') fields[key] = document.getElementById('input-snippet').value.trim() || null;
+    else fields[key] = null;
+  });
+  fields.status = 'Pending';
+  fields.action = 'Not Started';
+
+  const id = 'opp-' + Date.now();
+  state.opportunities.push({
+    id,
+    category,
+    fields,
+    assessment: null,
+    logged_date: new Date().toISOString().slice(0, 10),
+  });
+  saveData();
+  state.activeTab = category;
+  lastAssessment = null;
+  goDetail(id);
+}
 
 function renderStage0Summary(s0) {
   const fields = [
@@ -1487,60 +1528,32 @@ function renderStage0Summary(s0) {
   </div>`;
 }
 
-function buildStage0Prompt(url, snippet) {
-  return `You are extracting factual details from an opportunity listing (grant, fellowship, scholarship, job, consultancy, training, or conference). Extract only what is explicitly stated; do not invent or guess values not present in the source.
-
-URL: ${url}
-PASTED TEXT:
-${snippet || '(none pasted — use web search on the URL to find the page, then extract from it)'}
-
-Return ONLY valid JSON, no preamble:
-{
-  "title": "full name of the opportunity",
-  "provider": "organisation or body offering it, or null",
-  "location": "location or country where the role/opportunity is based, or null",
-  "date_released": "date the call was published/opened, exactly as stated, or null",
-  "deadline": "application deadline exactly as stated, or null",
-  "amount_original": "funding, prize, stipend, salary or fee in its original currency exactly as stated, or null",
-  "amount_scr": "same amount in Seychelles Rupees (SCR), using today's exchange rate — state the rate used in brackets, e.g. SCR 69,000 (1 USD = 13.8 SCR), or null if not calculable",
-  "duration": "length or duration of the opportunity exactly as stated, or null",
-  "contract_type": "e.g. Full-time, Part-time, Fixed-term, Consultancy, Remote, or null"
-}`;
-}
-
-function buildAssessPrompt(url, snippet, category, s0) {
-  const confirmedDetails = s0 ? `
-CONFIRMED DETAILS (already extracted and verified by the user — do not re-extract these):
-Title: ${s0.title || 'unknown'}
-Provider: ${s0.provider || 'unknown'}
-Deadline: ${s0.deadline || 'unknown'}
-Fund size: ${s0.amount_original || 'unknown'}
-Duration: ${s0.duration || 'unknown'}
-` : '';
-
+function buildAssessPrompt(url, snippet, category) {
   return `You are an opportunity analyst assessing a fellowship, grant, scholarship,
 job, consultancy, training, or conference against a specific profile. Work through
 four stages internally (eligibility check, criteria extraction, profile mapping,
 summary) and return the complete result in one response. Be strict: do not inflate
 weak alignment to moderate, and do not use generic language like "passionate about"
-or "unique opportunity." You have ample token budget — return the full JSON
-including all arrays, do not truncate or omit fields.
-${confirmedDetails}
+or "unique opportunity." Extract only facts explicitly present in the pasted text;
+do not browse, invent facts, or guess an exchange rate. Return all fields in one response.
 PROFILE ANCHORS:
 ${PROFILE_ANCHORS}
 
 URL: ${url}
 CATEGORY: ${category}
 PASTED DETAILS FROM THE PAGE:
-${snippet || '(none pasted, try a web search on the URL/title first; if nothing useful comes back, assess cautiously from the URL alone and say so in recommended_angle)'}
+${snippet}
 
 Return ONLY valid JSON, no preamble, matching this exact shape:
 {
+  "location": "location or country where the opportunity is based, or null",
+  "date_released": "publication/opening date exactly as stated, or null",
+  "contract_type": "e.g. Full-time, Part-time, Fixed-term, Consultancy, Remote, or null",
   "title": "opportunity title",
   "provider": "implementing organisation or location, or null",
   "deadline": "deadline as stated, or null",
   "amount_original": "funding/fee/amount as stated in its original currency, or null",
-  "amount_scr": "same amount converted to Seychelles Rupees using today's rate, stating the rate used, or null if not calculable",
+  "amount_scr": "same amount converted to Seychelles Rupees only if the source gives an exchange rate; otherwise null",
   "duration": "duration or length, or null",
   "description": "2-3 factual sentences: what it is, who can apply, what it funds or covers",
   "format": "In person / Online / Hybrid, or null (trainings/conferences only)",

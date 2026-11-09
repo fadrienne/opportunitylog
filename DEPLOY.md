@@ -44,4 +44,6 @@ When I send you updated files:
 1. Replace each changed file in your GitHub repo, keeping `api/assess.js` in the `api` folder.
 2. Vercel redeploys automatically within about 30 seconds.
 
-Assessment responses are streamed from Anthropic so Vercel can start responding before the full assessment is complete. If an assessment still returns HTTP 504, confirm the latest `index.html` and `api/assess.js` are deployed, then retry.
+Assessment responses are streamed from Anthropic. To reduce timeouts and API usage, assessment now uses one request and does not use web search; paste the opportunity text into Details before running it. A timeout can still consume credits, so do not repeatedly retry a failing request.
+
+The tracker and manual logging work without Anthropic credits. Use **Log without AI** to save an opportunity directly in this browser; it will be marked as not assessed. AI assessments still require a working Anthropic API key and available API credits. There is no way for a hosted AI assessment to continue after those credits run out without switching to a separately funded provider or running a local model.
