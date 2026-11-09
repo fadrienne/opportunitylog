@@ -117,6 +117,18 @@ button.count-chip:hover, button.count-chip:focus-visible { border-color: var(--s
 button.count-chip.active { background: var(--sea-mid); border-color: var(--sea-mid); color: white; }
 button.count-chip.active b { color: white; }
 
+/* Weekly Scan tab */
+table.scan-table { table-layout: fixed; }
+.scan-table td.scan-deadline { font-size: 12.5px; white-space: normal; overflow-wrap: break-word; }
+.scan-table .scan-closed { font-style: italic; color: var(--ink-soft); }
+.scan-table .scan-soon { font-weight: 700; }
+.scan-table .scan-why { font-size: 12.5px; color: var(--ink-soft); margin-top: 4px; }
+.scan-table .scan-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.scan-table .scan-actions select { font-family: inherit; font-size: 12px; padding: 5px 6px; max-width: 100%; border: 1px solid var(--line); border-radius: var(--radius); background: white; color: var(--ink); }
+.scan-note { font-size: 12px; color: var(--ink-soft); margin: 10px 0 0 0; }
+.scan-badge-new { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--sea-mid); border: 1px solid var(--sea-mid); padding: 1px 6px; border-radius: 2px; margin-left: 8px; }
+.scan-badge-applied { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: white; background: var(--sea-deep); padding: 1px 6px; border-radius: 2px; margin-left: 8px; }
+
 table { width: 100%; border-collapse: collapse; background: white; border: 1px solid var(--line); }
 th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
 th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); font-weight: 500; background: var(--sand-dim); }
@@ -269,9 +281,24 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 <header>
   <h1>Opportunity Log</h1>
   <div class="subtitle">Grants, fellowships, consultancies and every other call worth tracking, assessed on entry and sorted by deadline.</div>
+  <button class="ghost" id="cloud-sync-toggle" type="button" aria-expanded="false">Cloud sync: not connected</button>
 </header>
 
 <nav class="tabs" id="tabs"></nav>
+
+<section class="form-panel" id="cloud-sync-panel" style="display:none; margin:14px auto; max-width:1100px;" aria-label="Cloud sync settings">
+  <h3>Private cloud sync</h3>
+  <p class="hint">Connect this browser to your shared Supabase list. The private sync key is stored in this browser; anyone with the key can access your list.</p>
+  <label for="sync-api-url">Vercel site URL</label>
+  <input type="url" id="sync-api-url" placeholder="https://your-project.vercel.app" />
+  <label for="sync-access-key">Private sync key</label>
+  <input type="password" id="sync-access-key" autocomplete="new-password" />
+  <div class="form-actions">
+    <button class="primary" id="sync-connect" type="button">Connect and sync</button>
+    <button class="ghost" id="sync-disconnect" type="button">Disconnect</button>
+  </div>
+  <p class="hint" id="sync-status" role="status">Not connected. Configure Supabase and the Vercel environment variables first.</p>
+</section>
 
 <main id="app">
 
@@ -364,16 +391,24 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 
   <div id="view-detail" style="display:none"></div>
 
+  <div id="view-scan" style="display:none"></div>
+
 </main>
 
 <script>
 const SEED = [{"id": "seed-1", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Blue and Green Islands Integrated Programme (BGI-IP) GEF Programme", "implementor": "UNDP/GEF", "deadline": "Active Project", "date_applied": "N/A", "outcome": "Apply", "fund_size_original": "$135,600,000", "fund_size_scr": "Unknown", "duration": "Multi-year", "description": "GEF-funded nature-positive development in food/tourism/urban sectors for SIDS.", "url": "https://www.undp.org/nature/press-releases/1356-million-blue-and-green-islands-integrated-programme-will-transform-islands-valui", "action": "Drafting", "status": "Not Pursued"}}, {"id": "seed-2", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Vital Voices Global Fellowship", "implementor": "Vital Voices Global", "deadline": "4/15/2025", "date_applied": "4/11/2025", "outcome": "Apply", "fund_size_original": "Fully funded", "fund_size_scr": "Unknown", "duration": "10 months", "description": "Leadership program for women in social entrepreneurship/public leadership; applied to build ocean governance networks.", "url": "https://opportunitydesk.org/2025/03/21/vital-voices-global-fellowship-2025/", "action": "Submitted", "status": "Not Succesful"}}, {"id": "seed-3", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "HARMONiSE (UN Ocean Decade Call No.10)", "implementor": "UN Ocean Decade", "deadline": "1/31/2026", "date_applied": "1/31/2026", "outcome": "Apply", "fund_size_original": "No funding", "fund_size_scr": "No Funding", "duration": "Multi-year", "description": "UN Ocean Decade endorsed project submission for HARMONiSE.", "url": "https://oceandecade.org/call-for-decade-actions-10-2025/", "action": "Submitted", "status": "Successful"}}, {"id": "seed-4", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "WILD Network Global Leaders Program", "implementor": "WILD Network", "deadline": "3/31/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Complimentary forum pass (valued at USD 595)", "fund_size_scr": "SCR 8,449 (at 1 USD = 14.20 SCR)", "duration": "5 months (April to August 2026)", "description": "A scholarship programme for early-, mid-, and senior-career professional women working in global development, humanitarian assistance, and other purpose-driven fields. Fellows receive a complimentary pass to the online 2026 Leadership for Social Impact Forum plus five months of leadership development activities including masterclasses, MentorMatch, and community events.", "url": "https://www.wildleadershipforum.com/2026wildfellow", "action": "Submitted", "status": "Successful"}}, {"id": "seed-5", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Ocean Community Challenge 2026", "implementor": "Ocean Community", "deadline": "3/31/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD10,500 total prize pool", "fund_size_scr": "Approx. SCR 144,375", "duration": "4 mths (from Oct 2026)", "description": "Global innovation challenge for ocean-positive solutions that support a healthy ocean and sustainable blue economy.", "url": "https://www.oceancommunitychallenge.com/oc-challenge", "action": null, "status": "Missed Deadline"}}, {"id": "seed-6", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OSV Fellowships & Grants", "implementor": "O'Shaunessy Foundation", "deadline": "5/30/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD100,000", "fund_size_scr": "SCR 1,375,000", "duration": "12 months", "description": "Non-dilutive funding targeting builders in ocean research and SIDS blue economy.", "url": "https://www.globalsouthopportunities.com/2026/01/02/fellowships-9/", "action": "Deferred (Later Cycle)", "status": "Not Pursued"}}, {"id": "seed-7", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "DRK Foundation", "implementor": "Draper Richards Kaplan Foundation", "deadline": "Rolling", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD300,000", "fund_size_scr": "SCR 4,125,000", "duration": "3 years", "description": "Early-stage social enterprise funding.", "url": "https://www.drkfoundation.org/apply-for-funding/what-we-fund/", "action": "Deferred (Later Cycle)", "status": "Expired"}}, {"id": "seed-8", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Belmont Forum - CRA Ocean 2", "implementor": "Belmont Forum", "deadline": "4/30/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Unknown", "fund_size_scr": "Unknown", "duration": "36 months", "description": "Multinational, transdisciplinary research teams working on ocean biodiversity, nature-based solutions, ocean-biodiversity-climate integration, and ocean governance and ethics, as a formal contribution to the UN Ocean Decade.", "url": "https://belmontforum.org/archives/open-opportunity/ocean-2/", "action": "Drafting", "status": "Expired"}}, {"id": "seed-9", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Utrecht University Critical Pathways Fellowship 2026", "implementor": "Utrecht University / Towards a Circular Economy and Society", "deadline": "4/27/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "EUR10,000", "fund_size_scr": "SCR 149,500", "duration": "4-6 weeks (Oct-Nov 2026)", "description": "Fully funded short residential fellowship at Utrecht University. 2026 theme: Making Visible the Invisible. Explore hidden systems driving ecological breakdown and social inequality. Strong alignment: ocean data injustice in SIDS; hydrospatial governance gaps; High-Income SIDS Paradox. Dossier and Stage 4 assessment complete.", "url": "https://www.uu.nl/en/news/making-visible-the-invisible-critical-pathways-fellowships-2026", "action": "Drafting", "status": "Expired"}}, {"id": "seed-10", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OPERA Consortium Grant (26487-GRANT-OPERA-OOFS)", "implementor": "Mercator Ocean", "deadline": "6/5/2026", "date_applied": null, "outcome": "Park", "fund_size_original": "USD800,000", "fund_size_scr": "SCR 13,600,000", "duration": "40 months", "description": "Formation and management of a Consortium of sub-Saharan African institutions for the codesign, installation, and operation of Ocean forecasting systems in the framework of the OPERA project.", "url": "https://www.mercator-ocean.eu/tender/151/", "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-11", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainable Blue Economy Partnership Joint Transnational Call 3", "implementor": "EU", "deadline": "6/17/2026", "date_applied": null, "outcome": "Park", "fund_size_original": "EUR 4,350,000", "fund_size_scr": "SCR740M", "duration": "36 months", "description": "EU-funded R&I for blue bioresources, climate-smart sea-use planning - form consortium as SIDS lead for multi-use marine infrastructures.", "url": "https://www.bluepartnership.eu/funding-opportunity/sustainable-blue-economy-partnerships-third-joint-transnational-call", "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-12", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "OceanX Ocean Futures Fellowship 2026", "implementor": "OceanX / Institute of International Education (IIE)", "deadline": "5/3/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Monthly stipend x 6 months (amount undisclosed) + technology stipend on case-by-case basis", "fund_size_scr": "Not calculable \u2014 stipend amount not publicly disclosed", "duration": "6 months full-time remote (June-December 2026)", "description": "Six-month full-time remote fellowship administered by IIE on behalf of OceanX, open to early-career ocean professionals aged 21+. Francesca is applying for the Partnerships track, supporting relationships that advance ocean health.", "url": "https://www.iie.org/programs/oceanfuturesfellowship/", "action": "Drafting", "status": "Expired"}}, {"id": "seed-13", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Critical Pathways Autumn Fellowship 2026 \u2014 Making Visible the Invisible", "implementor": "Utrecht University (Critical Pathways community & Towards a Circular Economy and Society initiative)", "deadline": "4/27/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "EUR 10,000", "fund_size_scr": "\u20a8173,200 (at \u20ac1 = \u20a817.32, XE mid-market, 22 April 2026)", "duration": "4-6 weeks residential residency, October-November 2026", "description": "Short-term research residency at Utrecht University for the 2026 theme \"Making Visible the Invisible.\" Funds travel, accommodation, visa, and research materials up to \u20ac10,000. Relevant through the framing of ocean data as an extractive resource and hydrospatial infrastructure as a knowledge commons model.", "url": "https://www.uu.nl/en/news/making-visible-the-invisible-critical-pathways-fellowships-2026", "action": "Drafting", "status": "Expired"}}, {"id": "seed-14", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Mira Fellowship", "implementor": "The Mira Fellowship", "deadline": "1-Jun-26", "date_applied": "\u2014", "outcome": "Apply", "fund_size_original": "Unspecified (micro-grants only; no stipend)", "fund_size_scr": "N/A", "duration": "Ongoing; annual Cohort Sprint", "description": "A global fellowship for mid-career innovators pursuing systems-level change, open worldwide. Fellows receive 1:1 coaching, peer community access, micro-grants, and introductions to donors and investors. Relevant to SHORE as a vehicle for project development support, fundraising readiness, and network access for HARMONiSE.", "url": "https://www.mirafellowship.org/fellowship", "action": null, "status": "To Apply"}}, {"id": "seed-15", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Hydrospatial Literacy Platform (ETF Cycle 1, Proposal B)", "implementor": "SeyCCAT / Environment Trust Fund", "deadline": "27-May-26", "date_applied": "46169", "outcome": "Apply", "fund_size_original": "SCR 100,000 (max)", "fund_size_scr": "SCR 100,000", "duration": "12 months", "description": "Education and Awareness category. Custom-built open-access hydrospatial literacy platform for Seychelles marine sector practitioners and students. Submitted 27 May 2026, awaiting outcome.", "url": null, "action": "Submitted", "status": "Pending"}}, {"id": "seed-16", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "In Development Magazine \u2014 Call for Pitches", "implementor": "In Development Magazine", "deadline": "1-Jul-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 2,000", "fund_size_scr": "SCR 29,400 (approx.)", "duration": "2,000-4,000 word commissioned essay", "description": "Pitch drafted around the High-Income SIDS Paradox, Seychelles as case study, framed as borrowed ocean data infrastructure.", "url": "https://indevelopmentmag.substack.com/p/call-for-pitches", "action": "Drafting", "status": "Pending"}}, {"id": "seed-17", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Knowledge Frontiers: International Interdisciplinary Research Projects 2026", "implementor": "The British Academy (UK)", "deadline": "~Sep 2026 (TBC, call opens June 2026)", "date_applied": null, "outcome": "Pass (Not Eligible)", "fund_size_original": "GBP 300,000", "fund_size_scr": "SCR 5,628,000 (at GBP 1 = SCR 18.76, 23 Apr 2026)", "duration": "24 months", "description": "UK-led HSS interdisciplinary scheme; Francesca as international Co-Applicant contributing SHORE hydrospatial data governance and SIDS equity case. Blocked: no UK PI identified yet, a hard requirement before further work is worthwhile.", "url": "https://www.thebritishacademy.ac.uk/funding/schemes/knowledge-frontiers-international-interdisciplinary-research/", "action": "Withdrawn", "status": "Not Pursued"}}, {"id": "seed-18", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Green Institute Sustainability Impact Grant \u2014 Round 2", "implementor": "Green Institute", "deadline": "8-Sep-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 5,000", "fund_size_scr": "SCR 69,065 (at 1 USD = 13.813 SCR)", "duration": "Project-based", "description": "Desktop geospatial study prioritising deep-sea habitat features (seamounts, hydrothermal vents, abyssal plains) in the Seychelles EEZ using public bathymetric data. Originally scoped against GOIPG PhD independence constraints; that premise no longer holds after the GOIPG withdrawal, rationale needs re-checking before submission. Target submission mid-August 2026.", "url": null, "action": "Declined to Pursue (Outcome - Apply)", "status": "Not Pursued"}}, {"id": "seed-19", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Mo Ibrahim Foundation Academy Fellowship (Chatham House)", "implementor": "Chatham House / Queen Elizabeth II Academy", "deadline": "7-Apr-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "GBP 2,565/month stipend + travel, relocation, visa costs", "fund_size_scr": "Not calculated", "duration": "10 months, Oct 2026 start", "description": "Fully funded global policy fellowship, London-based. African-citizen track identified as best fit; proposed angle was hydrospatial data governance for climate resilience in African SIDS. No application proceeded past initial scoping.", "url": "https://careers.chathamhouse.org/jobs/7401384-2026-2027-chatham-house-academy-fellowships", "action": null, "status": "Missed Deadline"}}, {"id": "seed-20", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "ESA African Research Fellowship (ARF) 2026", "implementor": "European Space Agency / EO AFRICA", "deadline": "29-Apr-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "1 year, ESRIN Frascati, Oct 2026 start", "description": "Earth Observation fellowship for African researchers using satellite EO data. Eligibility flagged as needing verification against thematic priority areas; never progressed past Stage 0 shortlist.", "url": "https://eo4society.esa.int/2026/03/18/african-research-fellowships-call-2026/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-21", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Global Fishing Watch Open Ocean Research Grant 2026", "implementor": "Global Fishing Watch", "deadline": "LOI: 10 May 2026", "date_applied": null, "outcome": "Pass", "fund_size_original": "USD 20,000 (team) / USD 10,000 (individual)", "fund_size_scr": "SCR 292,400 (team, at 1 USD = SCR 14.62, 19 Apr 2026)", "duration": "Cohort Nov 2026-2028", "description": "Full Stage 1-4 assessment completed. Moderate alignment on ocean governance and MSP, but weak on GFW's core domain of vessel monitoring and fishing effort analysis. Decided not to apply.", "url": "https://globalfishingwatch.org/open-ocean-research-grants-program/", "action": "Withdrawn", "status": "Not Pursued"}}, {"id": "seed-22", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Elevate Prize 2027", "implementor": "Elevate Prize Foundation", "deadline": "Nominations: 8 May 2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "USD 300,000 unrestricted + 2-year support programme", "fund_size_scr": "Not calculated", "duration": "Nomination-based, 2-year programme", "description": "Nomination-based award for social impact leaders driving systemic change. Programme typically targets orgs with USD 2-10M budgets, fit at SHORE's current scale uncertain. Never advanced past Stage 0 shortlist.", "url": "https://elevateprize.org/the-elevate-prize/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-23", "category": "Grants & Fellowships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Save Our Seas Foundation Keystone Grant", "implementor": "Save Our Seas Foundation", "deadline": "13-May-26", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not specified publicly", "fund_size_scr": "Not calculated", "duration": "Not specified", "description": "Conservation grant focused narrowly on threatened marine megafauna (sharks, rays, skates). Weak thematic fit with SHORE flagged at Stage 0; never advanced.", "url": "https://saveourseas.com/grants/funding-applications/", "action": null, "status": "Missed Deadline"}}, {"id": "seed-24", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IUCN Island Plas Accelerator", "implementor": "IUCN", "deadline": "1/30/2026", "date_applied": "2/11/2026", "outcome": "Apply", "fund_size_original": "Part of USD10,000,000", "fund_size_scr": "Unknown", "duration": "Project-based", "description": null, "url": "https://www.linkedin.com/posts/the-great-blue-wall_deadline-extended-the-deadline-for-the-activity-7418939964274429952-3tyO", "action": "Submitted", "status": "Pending"}}, {"id": "seed-25", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IOC UNESCO Consultancy", "implementor": "UNESCO Ocean", "deadline": "2/11/2026", "date_applied": "2/11/2026", "outcome": "Apply", "fund_size_original": "USD33,000", "fund_size_scr": "SCR491,870", "duration": "110 days", "description": "Individual consultant for actions management/monitoring.", "url": null, "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-26", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "IPOS AKC", "implementor": "IPOS", "deadline": "3/22/2026", "date_applied": "3/16/2026", "outcome": "Apply", "fund_size_original": "USD 500/day", "fund_size_scr": "SCR 6,875/day", "duration": "1 year", "description": "Science-policy interface role with meetings/reviews.", "url": "https://blog.wiomsa.net/wp-content/uploads/2026/03/Call-For-New-AKC-members.pdf", "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-27", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "WIO-MCEN Coordinator \u2014 Support the Structuring and Coordination of a Regional Marine and Coastal Education Network", "implementor": "Indian Ocean Commission (IOC) / RECOS Project (AFD + FFEM)", "deadline": "23 June 2026, 16:00 Mauritius time", "date_applied": null, "outcome": "Park", "fund_size_original": "Not disclosed (EOI stage)", "fund_size_scr": "N/A", "duration": "Not specified (EOI stage)", "description": "EOI for individual consultant to coordinate WIO-MCEN regional network. French and English professional proficiency mandatory (confirmed met). EOI fully drafted, decision pending given gaps in network facilitation framing and resources mobilisation evidence.", "url": null, "action": null, "status": "Not Pursued"}}, {"id": "seed-28", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "GEBCO Policy Officer (CL30/2026)", "implementor": "IHO / GEBCO Secretariat, Monaco", "deadline": "7/31/2026", "date_applied": null, "outcome": "Pass (Not Eligible)", "fund_size_original": "P-3, ICSC framework + Monaco post adjustment (figure not published)", "fund_size_scr": "Not calculable", "duration": "3 years FTA, extension possible", "description": "P-3 policy officer role co-located with IHO Secretariat. Blocked: role lists advanced degree requirement, Francesca holds a bachelor's only. Email sent to Samuel Harper (IHO) to clarify whether this is a hard administrative filter or committee discretion; answer needed well before the deadline.", "url": "https://iho.int", "action": null, "status": "To Apply - blocked"}}, {"id": "seed-29", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Consultant: Digital Sovereignty & Alternative Technologies (DDI)", "implementor": "CIVICUS / Digital Democracy Initiative", "deadline": "4/26/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "Consultancy, 40-60pp research report", "description": "Assessment stalled at Stage 3. Partial fit: civic tech / open-source platform governance experience not a documented specialism against hydrospatial data governance background. No application proceeded.", "url": "https://civicus.org/index.php/component/content/article/8199-research-consultant-digital-sovereignty-alternative-technologies", "action": null, "status": "Missed Deadline"}}, {"id": "seed-30", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Officer", "implementor": "Southern Voice", "deadline": "5/8/2026", "date_applied": null, "outcome": "Pass", "fund_size_original": "Not disclosed", "fund_size_scr": "Not calculated", "duration": "Through Dec 2026, possibly into 2027", "description": "Cover letter drafted and reached strong final version. Declined to apply once the contract period was identified as directly conflicting with the planned September MSc start. Decision made on reputational and commitment grounds.", "url": null, "action": null, "status": "Not Pursuing"}}, {"id": "seed-31", "category": "Consultancies & Jobs", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Intern", "implementor": "CIVICUS", "deadline": "5/18/2026", "date_applied": null, "outcome": "Apply", "fund_size_original": "Not stated", "fund_size_scr": "Not calculated", "duration": "Part-time, start 1 Jul 2026", "description": "Full cover note drafted and finalised same day as the deadline. No compensation figure was ever published or confirmed. No record of final submission.", "url": "https://civicus.bamboohr.com/careers/78", "action": "Drafting", "status": "Not Pursued"}}, {"id": "seed-32", "category": "Scholarships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "SWDTP Human Geography PhD", "implementor": "University of Plymouth", "deadline": "1/9/2026", "date_applied": "12/15/2025", "outcome": "Apply", "fund_size_original": "Tuition + stipend", "fund_size_scr": "Unknown", "duration": "3-4 years", "description": "Funded PhD in Human Geography focused on hydrospatial science; prepared personal statement and proposal.", "url": "https://www.bristol.ac.uk/geography/courses/postgraduate/humanphd.html", "action": "Submitted", "status": "Not Succesful"}}, {"id": "seed-33", "category": "Scholarships", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "SIDS Water Scholarships MSc", "implementor": null, "deadline": "6/1/2026", "date_applied": null, "outcome": null, "fund_size_original": "Fully funded", "fund_size_scr": "Unknown", "duration": "2 years", "description": "Fully funded postgraduate for SIDS professionals; complements PhD pursuits in marine/hydrospatial science.", "url": "https://opportunitiesforyouth.org/2026/03/02/sids-water-scholarships/", "action": "Declined to Pursue (Outcome - Apply)", "status": "Expired"}}, {"id": "seed-34", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Master in Global Studies (EMGS)", "location": "Erasmus Mundus", "deadline": "15th March", "funding": "All tuition fees and as well as a living allowance of \u20ac1,400 per month", "outcome": null, "url": "https://globalstudies-masters.eu/"}}, {"id": "seed-35", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Joint Master in Global Environment and Development", "location": null, "deadline": null, "funding": null, "outcome": null, "url": "https://merged.info/"}}, {"id": "seed-36", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Joint Master in Global Change Ecology and Biodiversity Management", "location": null, "deadline": "Oct - Dec 2025", "funding": "Full 24-month duration of the programme as well as a monthly stipend of 1,400\u20ac", "outcome": null, "url": "https://globe-master.eu/"}}, {"id": "seed-37", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Executive MSc & MSc in Innovation and Entrepreneurship", "location": "HEC Paris", "deadline": null, "funding": "Euro 22,950-24,950 = SCR381,200 - SCR 414,550. Program deposit EUR 5,000 (due within 7 days); 1st installment EUR 6,650 (due 3 months); 2nd installment EUR 6,650 (due 6 months); 3rd installment EUR 6,650 (due 9 months)", "outcome": null, "url": "https://www.coursera.org/degrees/omie"}}, {"id": "seed-38", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Innovation Management & Entrepreneurship University Certificate (credit towards the Executive MSc)", "location": "HEC Paris", "deadline": null, "funding": "EUR4000 = SCR66500", "outcome": null, "url": "https://www.coursera.org/certificates/innovation-management-entrepreneurship-hec"}}, {"id": "seed-39", "category": "Masters", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Leading Innovation With Creativity University Certificate (credit towards the Executive MSc)", "location": "HEC Paris", "deadline": null, "funding": "EUR4000 = SCR66500", "outcome": null, "url": "https://www.coursera.org/certificates/leading-innovation-with-creativity-hec"}}, {"id": "seed-40", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "Utrecht University", "title": "PhD Position: Living Decent Lives within Safe and Just Planetary Boundaries", "url": "https://www.uu.nl/en/organisation/working-at-utrecht-university/jobs/phd-position-living-decent-lives-within-safe-and-just-planetary-boundaries", "deadline": "20-Apr-25", "fee": "Full Scholarship", "outcome": "Apply", "action": "Submitted", "status": "Applied Not Successful"}}, {"id": "seed-41", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": null, "title": "PhD Position: Transition towards Circular Societies", "url": "https://www.uu.nl/en/organisation/working-at-utrecht-university/jobs/phd-position-transition-towards-circular-societies", "deadline": "11-May-25", "fee": "Full Scholarship", "outcome": "Apply", "action": null, "status": "Missed"}}, {"id": "seed-42", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Malta", "title": "Doctor of Philosophy (Island & Small States)", "url": "https://www.um.edu.mt/issi/", "deadline": "2-Jul-25", "fee": "Full-time - EUR11,000 / Part-time - EUR5500", "outcome": null, "action": null, "status": "Pending"}}, {"id": "seed-43", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Essex", "title": "PhD Accounting", "url": "https://www.essex.ac.uk/scholarships/sustainable-transitions---governance-ecological-management-and-society", "deadline": "28-May-25", "fee": "Living costs stipend of \u00a320,780 + a research allowance of \u00a310,000", "outcome": "Pass (Not Eligible)", "action": null, "status": "Only for Home-Fee Student"}}, {"id": "seed-44", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "University of Wollongong", "title": "University Postgraduate Awards (UPAs) 2025 \u2014 PhD (Geography and Sustainable Communities)", "url": "https://www.uow.edu.au/research/graduate-research/scholarships/items/university-postgraduate-award-upa.php", "deadline": "International Applications: May 23, 2025 / Domestic Applications: October 3, 2025", "fee": "$35,522 AUD per annum (tax-free)", "outcome": null, "action": null, "status": "Pending"}}, {"id": "seed-45", "category": "PhD", "logged_date": "2026-07-28", "assessment": null, "fields": {"location": "UNU-IAS", "title": "Doctor of Philosophy in Sustainability Science", "url": "https://phd.unu.edu", "deadline": "19th February", "fee": "USD 12,000 per year", "outcome": "Park", "action": null, "status": "For 2026"}}, {"id": "seed-46", "category": "Internship", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "INTERSECT Internship", "url": "https://www.iaruni.org/university-of-copenhagen-intersect-internship", "deadline": "15-May-25", "funding": "$3000/Monthly", "outcome": "Apply", "action": "Submitted", "status": "Not Successful"}}, {"id": "seed-47", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainability Leadership Capabilities for the 21st Century", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "21-22 October 2024", "outcome": null, "format": "In person", "fee": "\u00a32,750", "cost_scr": "SCR 47,410.00", "travel_cost": "SCR 25,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 72,410.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-48", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Systems Thinking for Complex Sustainability Challenges", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "10-11 March 2025", "outcome": null, "format": "In person", "fee": "\u00a32,750", "cost_scr": "SCR 47,410.00", "travel_cost": "SCR 25,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 72,410.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-49", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Sustainability Practitioners Programme (SPP)", "location": "Melbourne, Australia", "deadline": null, "date_applied": null, "duration": "3-5 March 2025", "outcome": null, "format": "In person", "fee": "AUD 5,950", "cost_scr": "SCR 52,657.50", "travel_cost": "SCR 40,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 92,657.50", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-50", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "The Prince of Wales's Business & Sustainability Programme (BSP)", "location": "Cambridge, UK", "deadline": null, "date_applied": null, "duration": "27-30 April 2025", "outcome": null, "format": "In person", "fee": "\u00a34,750", "cost_scr": "SCR 81,890.00", "travel_cost": "SCR 20,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 101,890.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-51", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Business & Sustainability Programme (BSP) Africa", "location": "Nevisha, Kenya", "deadline": null, "date_applied": null, "duration": "16-19 March 2025", "outcome": "Apply", "format": "In person", "fee": "$3,500", "cost_scr": "SCR 46,760.00", "travel_cost": "SCR 15,000.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 61,760.00", "remarks": "The course fee includes accommodation and meals + Materials.", "url": null, "action": "Submitted", "status": "Attended"}}, {"id": "seed-52", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Leading Sustainability: High Impact Leadership", "location": "Online", "deadline": null, "date_applied": null, "duration": "9-Oct-24", "outcome": null, "format": "Online", "fee": "$2,113", "cost_scr": "SCR 28,229.68", "travel_cost": "SCR 0.00", "accommodation_cost": "SCR 0.00", "total_cost": "SCR 28,229.68", "remarks": "The course fee includes Materials.", "url": null, "action": null, "status": "Pending"}}, {"id": "seed-53", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Grant Writing and Funding (GWF) Program 2026", "location": "Leaders of Africa Institute", "deadline": "3/6/2026", "date_applied": "3/4/2026", "duration": "3 months", "outcome": "Apply", "format": "Online", "fee": "$300", "cost_scr": "SCR 4,008.00", "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Virtual program with certificate and grant support for research/funding applications in ocean data equity.", "url": "https://www.linkedin.com/posts/leadersafrica_grants-funding-research-activity-7424706852459999232-vYRR", "action": "Declined to Pursue (Outcome - Apply)", "status": "Successful"}}, {"id": "seed-54", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Research Methods Program 2026", "location": "Leaders of Africa Institute", "deadline": null, "date_applied": null, "duration": null, "outcome": null, "format": null, "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": null, "url": null, "action": null, "status": "Pending"}}, {"id": "seed-55", "category": "Trainings", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "2026 Accessing the Deep", "location": "Ocean Discovery League", "deadline": "3/8/2026", "date_applied": "3/5/2026", "duration": "4 months", "outcome": "Apply", "format": "Online", "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Capacity building for deep-sea exploration using low-cost methods (>200m depths), targeting Africa/Western Indian Ocean professionals.", "url": "https://www.oceandiscoveryleague.org/capacity-and-community-building/accessing-the-deep-2026", "action": "Submitted", "status": "Successful"}}, {"id": "seed-56", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Global Sustainable Tourism Conference 2025", "location": "Fiji", "duration": "5 - 8 August 2025", "description": "Coastal and Island Tourism Community, Culture, and Responsible Development; Climate Resilience, Adaption, and Sustainable Recovery", "abstract_deadline": "5/5/2025", "abstract_title": "Integrating Sustainability in Luxury Hospitality: The Raffles Seychelles Case Study", "program": "Tuesday 5 Aug: Academic Symposium, Pre-Conference Meetings, Welcome Dinner. Wed-Thu 6-7 Aug: Conference days. Fri 8 Aug: Post-conference tour.", "outcome": null, "format": "In person", "fee": "$480", "cost_scr": "SCR 6,403.20", "travel_cost": "SCR 50,000.00", "accommodation_cost": "SCR 7,500.00", "total_cost": "SCR 63,903.20", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-57", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "11th World Sustainability Forum", "location": "Barcelona, Spain", "duration": "2-3 October 2025", "description": "Sustainable and Resilient Cities", "abstract_deadline": "6/18/2025", "abstract_title": null, "program": null, "outcome": null, "format": "In person", "fee": "EUR 370", "cost_scr": "SCR 6,068.00", "travel_cost": "SCR 16,500.00", "accommodation_cost": "SCR 25,250.00", "total_cost": "SCR 47,818.00", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-58", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "12th World Sustainability Forum", "location": null, "duration": null, "description": null, "abstract_deadline": null, "abstract_title": null, "program": null, "outcome": null, "format": "In person", "fee": "EUR 370", "cost_scr": "SCR 6,068.00", "travel_cost": "SCR 16,500.00", "accommodation_cost": "SCR 25,250.00", "total_cost": "SCR 47,818.00", "remarks": "The fee includes access only", "url": null}}, {"id": "seed-59", "category": "Conferences", "logged_date": "2026-07-28", "assessment": null, "fields": {"title": "Seabed 2030 Symposium", "location": "Cartagena, Colombia", "duration": "8-9 October 2026", "description": "Seabed mapping, GEBCO network visibility", "abstract_deadline": null, "abstract_title": null, "program": null, "outcome": null, "format": null, "fee": null, "cost_scr": null, "travel_cost": null, "accommodation_cost": null, "total_cost": null, "remarks": "Open call, contributions due 26 June 2026. Flagged as low-cost way to build GEBCO network visibility ahead of the GEBCO/Nippon training cycle.", "url": null}}];
 const CATEGORY_SCHEMAS = {"Grants & Fellowships": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Fund Size (Original)"], ["fund_size_scr", "Fund Size (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Fund Size"]}, "Consultancies & Jobs": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Amount (Original)"], ["fund_size_scr", "Amount (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Amount"]}, "Scholarships": {"titleKey": "title", "titleLabel": "Name/Title", "orgKey": "implementor", "deadlineKey": "deadline", "fields": [["title", "Name/Title"], ["implementor", "Implementor"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["outcome", "Outcome"], ["fund_size_original", "Fund Size (Original)"], ["fund_size_scr", "Fund Size (SCR)"], ["duration", "Length/Duration"], ["description", "Description"], ["url", "URL"]], "dashboardExtra": ["fund_size_original", "Fund Size"]}, "Masters": {"titleKey": "title", "titleLabel": "Course Name", "orgKey": "location", "deadlineKey": "deadline", "fields": [["title", "Course Name"], ["location", "Location"], ["deadline", "Deadline"], ["funding", "Funding"], ["outcome", "Outcome"], ["url", "URL"]], "dashboardExtra": ["funding", "Funding"]}, "PhD": {"titleKey": "title", "titleLabel": "Name", "orgKey": "location", "deadlineKey": "deadline", "fields": [["location", "Location"], ["title", "Name"], ["url", "URL"], ["deadline", "Deadline"], ["fee", "Fee (Annual)"], ["outcome", "Outcome"]], "dashboardExtra": ["fee", "Fee"]}, "Internship": {"titleKey": "title", "titleLabel": "Name", "orgKey": null, "deadlineKey": "deadline", "fields": [["title", "Name"], ["url", "URL"], ["deadline", "Deadline"], ["funding", "Funding Available"], ["outcome", "Outcome"]], "dashboardExtra": ["funding", "Funding"]}, "Trainings": {"titleKey": "title", "titleLabel": "Name of Training", "orgKey": "location", "deadlineKey": "deadline", "fields": [["title", "Name of Training"], ["location", "Location"], ["deadline", "Deadline"], ["date_applied", "Date Applied"], ["duration", "Length"], ["outcome", "Outcome"], ["format", "Format"], ["fee", "Fee"], ["cost_scr", "Cost (SCR)"], ["travel_cost", "Travel"], ["accommodation_cost", "Accommodation"], ["total_cost", "Total"], ["remarks", "Remarks"], ["url", "URL"]], "dashboardExtra": ["total_cost", "Total Cost"]}, "Conferences": {"titleKey": "title", "titleLabel": "Name of Conference", "orgKey": "location", "deadlineKey": "abstract_deadline", "fields": [["title", "Name of Conference"], ["location", "Location"], ["duration", "Dates"], ["description", "Theme(s)"], ["abstract_deadline", "Abstract Deadline"], ["abstract_title", "Abstract Title"], ["program", "Program"], ["outcome", "Outcome"], ["format", "Format"], ["fee", "Fee"], ["cost_scr", "Cost (SCR)"], ["travel_cost", "Travel"], ["accommodation_cost", "Accommodation"], ["total_cost", "Total"], ["remarks", "Remarks"], ["url", "URL"]], "dashboardExtra": ["total_cost", "Total Cost"]}};
 const CATEGORIES = Object.keys(CATEGORY_SCHEMAS);
+const SNAPSHOT_SYNC_API_URL = null;
 const PROFILE_ANCHORS = "1. Seychelles Hydrospatial Observatory for Research and Exploration (SHORE) Institute: marine environment management through the hydrospatial domain, Seychelles blue economy, ocean data governance, SIDS equity, UN Ocean Decade.\n2. Flagship project HARMONiSE: Marine Spatial Data Infrastructure combining satellite-derived bathymetry, autonomous surveys, stakeholder co-design.\n3. Research interest: the High-Income SIDS Paradox, data sovereignty, hydrospatial infrastructure gaps in African SIDS.\n4. Spatial science and geospatial technologies, 15+ years, technical and institutional applications.\n5. Ocean governance and BBNJ, marine spatial planning, Seabed 2030, Seychelles Marine Spatial Plan.\n6. Project management and policy background, UNDP, former Director General Maritime Boundary Delimitation, cross-sector delivery.\n7. Ocean literacy, stakeholder engagement, community/citizen science, science communication.";
 
 let state = { opportunities: [], activeTab: CATEGORIES[0], statusFilter: 'all', deadlineFilter: 'all', assessmentFilter: 'all', showArchived: false, view: 'home', detailId: null, detailEditing: false, detailReturnView: 'dashboard', addReturnView: 'dashboard' };
 let lastAssessment = null;
+let cloudSyncQueue = Promise.resolve();
+let cloudSyncBaseline = new Map();
+let cloudSyncStatus = 'Not connected';
+let cloudSyncReady = false;
+let cloudSyncPolling = null;
 
 // The 59 imported rows never went through an assessment, so they had no
 // real verdict. This infers what the verdict must have been from what
@@ -415,14 +450,213 @@ function migrateRecord(rec) {
   return rec;
 }
 
+function getCloudSyncConfig() {
+  const defaultUrl = window.location.protocol === 'file:' ? SNAPSHOT_SYNC_API_URL : window.location.origin;
+  return {
+    apiUrl: (localStorage.getItem('opportunity-sync-api-url') || defaultUrl || '').replace(/\/+$/, ''),
+    key: localStorage.getItem('opportunity-sync-key') || '',
+  };
+}
+
+function setCloudSyncStatus(message, error = false) {
+  cloudSyncStatus = message;
+  const status = document.getElementById('sync-status');
+  const toggle = document.getElementById('cloud-sync-toggle');
+  if (status) {
+    status.textContent = message;
+    status.style.color = error ? 'var(--error)' : '';
+  }
+  if (toggle) {
+    toggle.textContent = getCloudSyncConfig().key
+      ? `Cloud sync: ${error ? 'needs attention' : message === 'Synced' ? 'connected' : 'working'}`
+      : 'Cloud sync: not connected';
+  }
+}
+
+function opportunitySignature(record) {
+  const { _syncUpdatedAt, ...content } = record;
+  return JSON.stringify(content);
+}
+
+function updateCloudSyncBaseline(records) {
+  cloudSyncBaseline = new Map((records || []).map(record => [record.id, opportunitySignature(record)]));
+}
+
+function stampLocalChanges() {
+  for (const record of state.opportunities) {
+    const signature = opportunitySignature(record);
+    if (cloudSyncBaseline.get(record.id) !== signature) {
+      const currentVersion = Date.parse(record._syncUpdatedAt) || 0;
+      record._syncUpdatedAt = new Date(Math.max(Date.now(), currentVersion + 1)).toISOString();
+      cloudSyncBaseline.set(record.id, signature);
+    }
+  }
+}
+
+function mergeOpportunityLists(cloudRecords, localRecords) {
+  const merged = new Map((cloudRecords || []).filter(record => record && record.id).map(record => [record.id, record]));
+  for (const local of localRecords || []) {
+    if (!local || !local.id) continue;
+    const cloud = merged.get(local.id);
+    const cloudVersion = Date.parse(cloud && cloud._syncUpdatedAt) || 0;
+    const localVersion = Date.parse(local._syncUpdatedAt) || 0;
+    if (!cloud || localVersion > cloudVersion) merged.set(local.id, local);
+  }
+  return Array.from(merged.values());
+}
+
+async function requestCloudSync(method, records) {
+  const config = getCloudSyncConfig();
+  if (!config.apiUrl || !config.key) throw new Error('Enter the Vercel URL and private sync key.');
+  const response = await fetch(`${config.apiUrl}/api/sync`, {
+    method,
+    headers: {
+      'X-Sync-Key': config.key,
+      ...(method === 'POST' ? { 'Content-Type': 'application/json' } : {}),
+    },
+    ...(method === 'POST' ? { body: JSON.stringify({ records }) } : {}),
+  });
+  let payload;
+  try {
+    payload = await response.json();
+  } catch (e) {
+    throw new Error(`Sync service returned a non-JSON response (HTTP ${response.status}).`);
+  }
+  if (!response.ok) throw new Error(payload.error || `Sync failed (HTTP ${response.status}).`);
+  if (!Array.isArray(payload.records)) throw new Error('Sync response did not contain an opportunity list.');
+  return payload.records;
+}
+
+async function syncWithCloud() {
+  const config = getCloudSyncConfig();
+  if (!config.key) {
+    setCloudSyncStatus('Not connected. Your data is saved only in this browser.');
+    return;
+  }
+  setCloudSyncStatus('Connecting to shared cloud data...');
+  try {
+    const cloudRecords = await requestCloudSync('GET');
+    let merged = mergeOpportunityLists(cloudRecords, state.opportunities);
+    const hasLocalChanges = merged.some(record => {
+      const cloud = cloudRecords.find(item => item.id === record.id);
+      return !cloud || record !== cloud;
+    });
+
+    if (!cloudRecords.length && merged.length) {
+      const now = Date.now();
+      merged.forEach((record, index) => {
+        record._syncUpdatedAt = record._syncUpdatedAt || new Date(now + index).toISOString();
+      });
+    } else {
+      const cloudIds = new Set(cloudRecords.map(record => record.id));
+      const now = Date.now();
+      merged.forEach((record, index) => {
+        if (!cloudIds.has(record.id) && !record._syncUpdatedAt) {
+          record._syncUpdatedAt = new Date(now + index).toISOString();
+        }
+      });
+    }
+    if (hasLocalChanges || !cloudRecords.length && merged.length) {
+      merged = await requestCloudSync('POST', merged);
+      merged = mergeOpportunityLists(merged, state.opportunities);
+    }
+    state.opportunities = merged.map(migrateRecord);
+    updateCloudSyncBaseline(state.opportunities);
+    localStorage.setItem('opportunities', JSON.stringify(state.opportunities));
+    setCloudSyncStatus('Synced');
+    startCloudSyncPolling();
+    if (state.view === 'home' || state.view === 'dashboard') render();
+  } catch (error) {
+    console.error('Cloud sync could not complete:', error);
+    setCloudSyncStatus(`Sync failed: ${error.message}. Your local data is still available.`, true);
+  }
+}
+
+function scheduleCloudSync() {
+  if (!cloudSyncReady || !getCloudSyncConfig().key) return;
+  cloudSyncQueue = cloudSyncQueue.then(async () => {
+    setCloudSyncStatus('Saving changes to the cloud...');
+    const cloudRecords = await requestCloudSync('POST', JSON.parse(JSON.stringify(state.opportunities)));
+    state.opportunities = mergeOpportunityLists(cloudRecords, state.opportunities).map(migrateRecord);
+    updateCloudSyncBaseline(state.opportunities);
+    localStorage.setItem('opportunities', JSON.stringify(state.opportunities));
+    setCloudSyncStatus('Synced');
+    if ((state.view === 'home' || state.view === 'dashboard') && !state.detailEditing) render();
+  }).catch(error => {
+    console.error('Cloud sync could not complete:', error);
+    setCloudSyncStatus(`Sync failed: ${error.message}. Your local data is still available.`, true);
+  });
+}
+
+function startCloudSyncPolling() {
+  if (cloudSyncPolling || !cloudSyncReady) return;
+  cloudSyncPolling = setInterval(() => {
+    if (document.visibilityState !== 'visible') return;
+    if (state.view === 'add' || state.detailEditing) return;
+    cloudSyncQueue = cloudSyncQueue.then(syncWithCloud).catch(error => {
+      console.error('Cloud sync refresh failed:', error);
+      setCloudSyncStatus(`Sync failed: ${error.message}. Your local data is still available.`, true);
+    });
+  }, 20000);
+}
+
+function initializeCloudSyncPanel() {
+  const config = getCloudSyncConfig();
+  const urlInput = document.getElementById('sync-api-url');
+  const keyInput = document.getElementById('sync-access-key');
+  const panel = document.getElementById('cloud-sync-panel');
+  const toggle = document.getElementById('cloud-sync-toggle');
+  urlInput.value = config.apiUrl;
+  keyInput.value = config.key;
+  toggle.onclick = () => {
+    const open = panel.style.display === 'none';
+    panel.style.display = open ? 'block' : 'none';
+    toggle.setAttribute('aria-expanded', String(open));
+  };
+  document.getElementById('sync-connect').onclick = async () => {
+    let apiUrl;
+    try {
+      apiUrl = new URL(urlInput.value.trim());
+      if (apiUrl.protocol !== 'https:' && apiUrl.hostname !== 'localhost') throw new Error('HTTPS required');
+    } catch (e) {
+      setCloudSyncStatus('Enter a valid HTTPS Vercel URL.', true);
+      urlInput.focus();
+      return;
+    }
+    const key = keyInput.value.trim();
+    if (!key) {
+      setCloudSyncStatus('Enter your private sync key.', true);
+      keyInput.focus();
+      return;
+    }
+    localStorage.setItem('opportunity-sync-api-url', apiUrl.origin);
+    localStorage.setItem('opportunity-sync-key', key);
+    cloudSyncReady = true;
+    await syncWithCloud();
+    startCloudSyncPolling();
+    render();
+  };
+  document.getElementById('sync-disconnect').onclick = () => {
+    localStorage.removeItem('opportunity-sync-key');
+    cloudSyncReady = false;
+    if (cloudSyncPolling) {
+      clearInterval(cloudSyncPolling);
+      cloudSyncPolling = null;
+    }
+    setCloudSyncStatus('Disconnected. Your cloud and local records are unchanged.');
+    keyInput.value = '';
+  };
+}
+
 async function loadData() {
+  let hasStoredData = false;
   try {
     const raw = localStorage.getItem('opportunities');
     if (!raw) throw new Error('empty');
     state.opportunities = JSON.parse(raw).map(migrateRecord);
+    hasStoredData = true;
   } catch (e) {
     state.opportunities = SEED.map(migrateRecord);
-    await saveData();
   }
   const dateFormatVersion = localStorage.getItem('opportunity-date-format-ddmmyyyy-v2');
   if (dateFormatVersion !== '1') {
@@ -433,18 +667,37 @@ async function loadData() {
         if (rec.fields && rec.fields[key]) rec.fields[key] = normalizeDateForStorage(rec.fields[key], sourceSlashOrder);
       });
     });
-    await saveData();
+    if (hasStoredData) {
+      try {
+        localStorage.setItem('opportunities', JSON.stringify(state.opportunities));
+      } catch (error) {
+        console.error('Could not save migrated opportunity dates:', error);
+        alert('Date display was updated, but the changes could not be saved in this browser.');
+      }
+    }
     localStorage.setItem('opportunity-date-format-ddmmyyyy-v2', '1');
+  }
+  updateCloudSyncBaseline(state.opportunities);
+  initializeCloudSyncPanel();
+  if (getCloudSyncConfig().key) {
+    cloudSyncReady = true;
+    await syncWithCloud();
+  } else {
+    setCloudSyncStatus('Not connected. Your data is saved only in this browser.');
   }
   render();
 }
 
-async function saveData() {
+function saveData() {
   try {
+    stampLocalChanges();
     localStorage.setItem('opportunities', JSON.stringify(state.opportunities));
+    scheduleCloudSync();
+    return true;
   } catch (e) {
     console.error('Storage failed', e);
     alert('Could not save. Your browser storage may be full or blocked — try a different browser.');
+    return false;
   }
 }
 
@@ -675,10 +928,12 @@ function render() {
   document.getElementById('view-dashboard').style.display = state.view === 'dashboard' ? 'block' : 'none';
   document.getElementById('view-add').style.display = state.view === 'add' ? 'block' : 'none';
   document.getElementById('view-detail').style.display = state.view === 'detail' ? 'block' : 'none';
+  document.getElementById('view-scan').style.display = state.view === 'scan' ? 'block' : 'none';
   buildTabs();
   if (state.view === 'home') renderHome();
   if (state.view === 'dashboard') renderDashboard();
   if (state.view === 'detail') renderDetail();
+  if (state.view === 'scan') renderScan();
 }
 
 function buildTabs() {
@@ -699,6 +954,11 @@ function buildTabs() {
     btn.onclick = () => { state.activeTab = cat; state.view = 'dashboard'; render(); };
     nav.appendChild(btn);
   });
+  const scanButton = document.createElement('button');
+  scanButton.textContent = 'Weekly Scan';
+  scanButton.className = state.view === 'scan' ? 'active' : '';
+  scanButton.onclick = goScan;
+  nav.appendChild(scanButton);
 }
 
 function renderHomeList(container, records, emptyText) {
@@ -1188,10 +1448,6 @@ function renderDetail() {
   const editField = ([key, label]) => {
     const value = f[key] == null ? '' : dateFieldKeys.has(key) ? formatOpportunityDate(f[key]) : String(f[key]);
     const id = `edit-field-${key}`;
-    if (key === 'outcome') {
-      const options = OUTCOME_VALUES.includes(value) ? OUTCOME_VALUES : (value ? [value, ...OUTCOME_VALUES] : OUTCOME_VALUES);
-      return `<label for="${id}">${escapeHtml(label)}</label><select class="form-select" id="${id}">${options.map(option => `<option value="${escapeHtml(option)}" ${value === option ? 'selected' : ''}>${escapeHtml(option)}</option>`).join('')}</select>`;
-    }
     if (['description', 'program', 'remarks'].includes(key)) {
       return `<label for="${id}">${escapeHtml(label)}</label><textarea id="${id}">${escapeHtml(value)}</textarea>`;
     }
@@ -1199,12 +1455,18 @@ function renderDetail() {
     const placeholder = dateFieldKeys.has(key) ? 'DD/MM/YYYY' : '';
     return `<label for="${id}">${escapeHtml(label)}</label><input type="${type}" id="${id}" value="${escapeHtml(value)}" ${placeholder ? `placeholder="${placeholder}" inputmode="numeric"` : ''} />`;
   };
+  const statusValue = f.status || 'Pending';
+  const statusOptions = STATUS_OPTIONS.includes(statusValue)
+    ? STATUS_OPTIONS
+    : [statusValue, ...STATUS_OPTIONS];
   const editorHtml = state.detailEditing ? `
     <div class="form-panel" id="entry-editor">
       <h3>Edit opportunity</h3>
       <label for="edit-logged-date">Date logged</label>
       <input type="text" id="edit-logged-date" value="${escapeHtml(formatOpportunityDate(rec.logged_date))}" placeholder="DD/MM/YYYY" inputmode="numeric" />
-      ${schema.fields.map(editField).join('')}
+      <label for="edit-status">Status</label>
+      <select class="form-select" id="edit-status">${statusOptions.map(option => `<option value="${escapeHtml(option)}" ${statusValue === option ? 'selected' : ''}>${escapeHtml(option)}${!STATUS_OPTIONS.includes(option) && option === statusValue ? ' (imported)' : ''}</option>`).join('')}</select>
+      ${schema.fields.filter(([key]) => key !== 'outcome').map(editField).join('')}
       <div class="form-actions">
         <button class="primary" id="save-entry-edit" type="button">Save changes</button>
         <button class="ghost" id="cancel-entry-edit" type="button">Cancel</button>
@@ -1269,7 +1531,7 @@ function renderDetail() {
     </div>
     <div class="outcome-row">
       <label style="margin:0;">Status</label>
-      <select class="outcome-select" id="status-select"></select>
+      ${state.detailEditing ? '' : '<select class="outcome-select" id="status-select"></select>'}
     </div>
     ${editorHtml}
     <h3 style="font-family:'Century Gothic', CenturyGothic, AppleGothic, sans-serif; font-weight:500; font-style:italic; color:var(--sea-deep); margin: 26px 0 12px 0;">Opportunity workspace</h3>
@@ -1333,10 +1595,17 @@ function renderDetail() {
   actionSel.innerHTML = actionOpts.map(o => `<option value="${escapeHtml(o)}" ${f.action===o?'selected':''}>${escapeHtml(o)}</option>`).join('');
   actionSel.onchange = () => { f.action = actionSel.value; saveData(); render(); };
 
-  const statusSel = document.getElementById('status-select');
-  const statusOpts = STATUS_OPTIONS.includes(f.status) ? STATUS_OPTIONS : (f.status ? [f.status, ...STATUS_OPTIONS] : STATUS_OPTIONS);
-  statusSel.innerHTML = statusOpts.map(o => `<option value="${escapeHtml(o)}" ${f.status===o?'selected':''}>${escapeHtml(o)}${!STATUS_OPTIONS.includes(o)&&o===f.status?' (imported)':''}</option>`).join('');
-  statusSel.onchange = () => { f.status = statusSel.value; saveData(); render(); };
+  if (!state.detailEditing) {
+    const statusSel = document.getElementById('status-select');
+    const statusOpts = STATUS_OPTIONS.includes(f.status) ? STATUS_OPTIONS : (f.status ? [f.status, ...STATUS_OPTIONS] : STATUS_OPTIONS);
+    statusSel.innerHTML = statusOpts.map(o => `<option value="${escapeHtml(o)}" ${f.status===o?'selected':''}>${escapeHtml(o)}${!STATUS_OPTIONS.includes(o)&&o===f.status?' (imported)':''}</option>`).join('');
+    statusSel.onchange = () => {
+      const previousStatus = f.status;
+      f.status = statusSel.value;
+      if (!saveData()) f.status = previousStatus;
+      render();
+    };
+  }
 }
 
 function saveEntryEdit(rec, schema, dateFieldKeys) {
@@ -1351,6 +1620,7 @@ function saveEntryEdit(rec, schema, dateFieldKeys) {
 
   const updatedFields = { ...rec.fields };
   for (const [key] of schema.fields) {
+    if (key === 'outcome') continue;
     const input = document.getElementById(`edit-field-${key}`);
     const rawValue = input.value.trim();
     if (dateFieldKeys.has(key) && rawValue && /\d{1,2}[/.]\d{1,2}[/.]\d{4}/.test(rawValue) && !parseDeadline(rawValue)) {
@@ -1379,10 +1649,18 @@ function saveEntryEdit(rec, schema, dateFieldKeys) {
     document.getElementById(`edit-field-${schema.titleKey}`).focus();
     return;
   }
+  updatedFields.status = document.getElementById('edit-status').value;
+  const previousFields = rec.fields;
+  const previousLoggedDate = rec.logged_date;
   rec.fields = updatedFields;
   rec.logged_date = loggedDate;
+  if (!saveData()) {
+    rec.fields = previousFields;
+    rec.logged_date = previousLoggedDate;
+    error.textContent = 'Changes were not saved. Free some browser storage and try again.';
+    return;
+  }
   state.detailEditing = false;
-  saveData();
   renderDetail();
 }
 
@@ -1911,12 +2189,222 @@ document.getElementById('snapshot-btn').onclick = () => {
     return;
   }
   const updatedHtml = currentHtml.replace(seedPattern, newSeedLiteral);
-  const blob = new Blob([updatedHtml], { type: 'text/html' });
+  const snapshotMarker = /const SNAPSHOT_SYNC_API_URL = [^;]+;/;
+  if (!snapshotMarker.test(updatedHtml)) {
+    alert('Could not configure cloud sync in the standalone copy. Download a CSV backup and contact support.');
+    return;
+  }
+  const syncUrl = window.location.protocol === 'file:' ? getCloudSyncConfig().apiUrl : window.location.origin;
+  const markedHtml = updatedHtml.replace(snapshotMarker, `const SNAPSHOT_SYNC_API_URL = ${JSON.stringify(syncUrl)};`);
+  const blob = new Blob([markedHtml], { type: 'text/html' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = 'opportunity-log-' + new Date().toISOString().slice(0, 10) + '.html';
   a.click();
 };
+
+// ---------- Weekly Scan tab ----------
+
+let scanState = { data: null, error: null, loading: false, tab: 'new', catChoice: {} };
+
+function goScan() {
+  state.view = 'scan';
+  state.detailId = null;
+  render();
+  if (!scanState.data && !scanState.loading) loadScanData();
+}
+
+async function loadScanData() {
+  scanState.loading = true;
+  scanState.error = null;
+  renderScan();
+  try {
+    const res = await fetch('scan-data.json?ts=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    scanState.data = await res.json();
+  } catch (e) {
+    scanState.error = e && e.message ? e.message : String(e);
+  }
+  scanState.loading = false;
+  if (state.view === 'scan') renderScan();
+}
+
+function scanLoggedMap() {
+  try { return JSON.parse(localStorage.getItem('scan-logged-ids') || '{}'); } catch (e) { return {}; }
+}
+function scanSetLogged(scanId, recordId) {
+  const map = scanLoggedMap();
+  map[scanId] = recordId;
+  try { localStorage.setItem('scan-logged-ids', JSON.stringify(map)); } catch (e) {}
+}
+function scanNormUrl(u) {
+  return String(u || '').trim().toLowerCase().replace(/^https?:\/\/(www\.)?/, '').replace(/[#?].*$/, '').replace(/\/+$/, '');
+}
+function scanFindLoggedRecord(item) {
+  const map = scanLoggedMap();
+  if (map[item.id] && state.opportunities.some(o => o.id === map[item.id])) return map[item.id];
+  const target = scanNormUrl(item.url);
+  if (!target) return null;
+  const hit = state.opportunities.find(o => o.fields && scanNormUrl(o.fields.url) === target);
+  return hit ? hit.id : null;
+}
+function scanGuessCategory(type) {
+  const t = String(type || '').toLowerCase();
+  if (t.includes('phd') || t.includes('doctor')) return 'PhD';
+  if (t.includes('scholar')) return 'Scholarships';
+  if (t.includes('consult') || t.includes('job') || t.includes('position') || t.includes('tender')) return 'Consultancies & Jobs';
+  if (t.includes('intern')) return 'Internship';
+  if (t.includes('train') || t.includes('course') || t.includes('workshop')) return 'Trainings';
+  if (t.includes('conference') || t.includes('summit') || t.includes('symposium')) return 'Conferences';
+  if (t.includes('master') || t.includes('msc')) return 'Masters';
+  return 'Grants & Fellowships';
+}
+
+function logScanItem(scanId) {
+  const items = (scanState.data && scanState.data.opportunities) || [];
+  const item = items.find(i => i.id === scanId);
+  if (!item) return;
+  const existing = scanFindLoggedRecord(item);
+  if (existing) { scanSetLogged(scanId, existing); renderScan(); return; }
+  const category = scanState.catChoice[scanId] || scanGuessCategory(item.type);
+  const schema = CATEGORY_SCHEMAS[category];
+  const fields = {};
+  schema.fields.forEach(([key]) => { fields[key] = null; });
+  const note = [item.why, item.fitScore != null ? `Weekly Scan fit score: ${item.fitScore}` : null].filter(Boolean).join(' ');
+  const set = (key, val) => { if (key in fields && val) fields[key] = val; };
+  set(schema.titleKey, item.name);
+  set('url', item.url);
+  set(schema.deadlineKey, item.deadlineISO || item.deadlineText);
+  set('description', note);
+  if (!fields.description) set('remarks', note);
+  fields.status = 'Pending';
+  fields.action = 'Not Started';
+  const record = {
+    id: 'opp-' + Date.now(),
+    category,
+    logged_date: new Date().toISOString().slice(0, 10),
+    assessment: null,
+    source: 'weekly-scan',
+    fields
+  };
+  state.opportunities.push(record);
+  saveData();
+  scanSetLogged(scanId, record.id);
+  renderScan();
+  buildTabs();
+}
+
+function openLoggedFromScan(recordId) {
+  const rec = state.opportunities.find(o => o.id === recordId);
+  if (!rec) return;
+  state.activeTab = rec.category;
+  goDetail(recordId);
+}
+
+function scanBuckets() {
+  const d = scanState.data || {};
+  const opps = (d.opportunities || []).slice().sort((a, b) => (b.fitScore || 0) - (a.fitScore || 0));
+  const latest = opps.reduce((m, o) => (o.firstSeen && o.firstSeen > m ? o.firstSeen : m), '');
+  const fresh = opps.filter(o => latest && o.firstSeen === latest);
+  const prev = opps.filter(o => !(latest && o.firstSeen === latest));
+  const disc = d.discarded || [];
+  return {
+    latest,
+    fresh,
+    prev,
+    age: disc.filter(o => o.reason === 'age'),
+    expired: disc.filter(o => o.reason !== 'age')
+  };
+}
+
+function scanFormatStamp(iso) {
+  if (!iso) return 'unknown';
+  const dt = new Date(iso);
+  if (isNaN(dt)) return String(iso);
+  return dt.toLocaleString(undefined, { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+function scanActionCell(item) {
+  const logged = scanFindLoggedRecord(item);
+  const link = item.url ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">Open page</a>` : '';
+  if (logged) {
+    return `<div class="scan-actions"><span class="hint">Logged</span><button class="ghost" type="button" data-open-logged="${escapeHtml(logged)}">Open in Log</button>${link}</div>`;
+  }
+  const guess = scanState.catChoice[item.id] || scanGuessCategory(item.type);
+  const options = CATEGORIES.map(c => `<option value="${escapeHtml(c)}"${c === guess ? ' selected' : ''}>${escapeHtml(c)}</option>`).join('');
+  return `<div class="scan-actions"><select data-scan-cat="${escapeHtml(item.id)}" aria-label="Category">${options}</select><button class="primary" type="button" data-log-scan="${escapeHtml(item.id)}">Log this</button>${link}</div>`;
+}
+
+function scanOpportunityCell(item, isNew) {
+  const badges = (isNew ? '<span class="scan-badge-new">New</span>' : '') +
+    (item.applicationStatus === 'applied' ? '<span class="scan-badge-applied">Applied</span>' : '');
+  const title = item.url
+    ? `<a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.name)}</a>`
+    : escapeHtml(item.name);
+  return `<strong>${title}</strong>${badges}<div class="hint">${escapeHtml(item.type || '')}</div>` +
+    (item.why ? `<div class="scan-why">${escapeHtml(item.why)}</div>` : '');
+}
+
+function scanTable(items, mode) {
+  if (!items.length) return '<p class="hint">Nothing here.</p>';
+  if (mode === 'dropped') {
+    const rows = items.map(item => `<tr class="data-row">
+      <td>${scanOpportunityCell(item, false)}</td>
+      <td class="scan-deadline">${escapeHtml(item.reasonDetail || item.reason || '')}</td>
+      <td class="scan-deadline">${escapeHtml(item.deadlineText || '')}</td></tr>`).join('');
+    return `<table class="scan-table"><colgroup><col style="width:50%"><col style="width:28%"><col style="width:22%"></colgroup>
+      <thead><tr><th>Opportunity</th><th>Why dropped</th><th>Deadline</th></tr></thead><tbody>${rows}</tbody></table>`;
+  }
+  const rows = items.map(item => `<tr class="data-row">
+    <td>${scanOpportunityCell(item, mode === 'new')}</td>
+    <td class="scan-deadline">${escapeHtml(item.deadlineText || '')}</td>
+    <td>${item.fitScore != null ? escapeHtml(item.fitScore) : ''}</td>
+    <td>${scanActionCell(item)}</td></tr>`).join('');
+  return `<table class="scan-table"><colgroup><col style="width:52%"><col style="width:18%"><col style="width:7%"><col style="width:23%"></colgroup>
+    <thead><tr><th>Opportunity</th><th>Deadline</th><th>Fit</th><th>Action</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+function renderScan() {
+  const root = document.getElementById('view-scan');
+  if (!root) return;
+  if (scanState.loading && !scanState.data) { root.innerHTML = '<p class="hint">Loading the weekly scan...</p>'; return; }
+  if (scanState.error && !scanState.data) {
+    root.innerHTML = `<p class="hint">Could not load scan-data.json (${escapeHtml(scanState.error)}). This tab needs the page to be served (Vercel or a local server) with scan-data.json next to index.html. Opening the file directly from disk will not work.</p>
+      <div class="toolbar"><button class="ghost" type="button" id="scan-retry">Try again</button></div>`;
+    const retry = document.getElementById('scan-retry');
+    if (retry) retry.onclick = loadScanData;
+    return;
+  }
+  const b = scanBuckets();
+  const meta = (scanState.data && scanState.data.meta) || {};
+  const tabs = [
+    ['new', 'New this week', b.fresh.length],
+    ['prev', 'Previously found', b.prev.length],
+    ['age', 'Dropped, age cap', b.age.length],
+    ['expired', 'Dropped, deadline passed', b.expired.length],
+    ['status', 'Last scan', null]
+  ];
+  const chips = tabs.map(([key, label, n]) =>
+    `<button type="button" class="count-chip${scanState.tab === key ? ' active' : ''}" data-scan-tab="${key}">${escapeHtml(label)}${n == null ? '' : ` <b>${n}</b>`}</button>`
+  ).join('');
+  let body = '';
+  if (scanState.tab === 'new') body = scanTable(b.fresh, 'new');
+  else if (scanState.tab === 'prev') body = scanTable(b.prev, 'prev');
+  else if (scanState.tab === 'age') body = scanTable(b.age, 'dropped');
+  else if (scanState.tab === 'expired') body = scanTable(b.expired, 'dropped');
+  else body = `<table class="scan-table"><colgroup><col style="width:30%"><col style="width:70%"></colgroup><tbody>
+      <tr><td>Scan ran</td><td>${escapeHtml(scanFormatStamp(meta.lastRunAt))}</td></tr>
+      <tr><td>New items</td><td>${escapeHtml(meta.newCount != null ? meta.newCount : '')}</td></tr>
+      <tr><td>Dropped, age cap</td><td>${escapeHtml(meta.discardedAgeCount != null ? meta.discardedAgeCount : '')}</td></tr>
+      <tr><td>Dropped, deadline passed</td><td>${escapeHtml(meta.discardedExpiredCount != null ? meta.discardedExpiredCount : '')}</td></tr>
+      <tr><td>Note</td><td>${escapeHtml(meta.note || '')}</td></tr></tbody></table>`;
+  root.innerHTML = `<div class="counts-bar">${chips}</div>${body}
+    <p class="scan-note">Snapshot exported ${escapeHtml(scanFormatStamp(scanState.data && scanState.data.exportedAt))}. Refreshed weekly into scan-data.json; reload after a redeploy to see new data.</p>`;
+  root.querySelectorAll('[data-scan-tab]').forEach(el => { el.onclick = () => { scanState.tab = el.dataset.scanTab; renderScan(); }; });
+  root.querySelectorAll('[data-log-scan]').forEach(el => { el.onclick = () => logScanItem(el.dataset.logScan); });
+  root.querySelectorAll('[data-open-logged]').forEach(el => { el.onclick = () => openLoggedFromScan(el.dataset.openLogged); });
+  root.querySelectorAll('[data-scan-cat]').forEach(el => { el.onchange = () => { scanState.catChoice[el.dataset.scanCat] = el.value; }; });
+}
 
 loadData();
 
