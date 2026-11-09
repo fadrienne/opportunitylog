@@ -330,7 +330,7 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
 
       <label>Or Details (paste description, eligibility, deadline, funding, whatever's on the page)</label>
       <textarea id="input-snippet" placeholder="Paste the call text here..."></textarea>
-      <p class="hint">The assessment is only as good as what's pasted here. If left blank, the model will try a web search on the URL, but that finds pages by keyword match, not by fetching the exact page.</p>
+      <p class="hint">Paste the opportunity details, or enter its URL and the assessment will search the web for the listing. Web search is used only when Details is empty.</p>
 
       <label>Or upload a PDF or Word document</label>
       <input type="file" id="input-file" accept=".pdf,.docx" />
@@ -341,9 +341,10 @@ select.outcome-select { max-width: 260px; padding: 9px 10px; border: 1px solid v
       <select class="form-select" id="input-category"></select>
     </div>
     <div class="form-actions">
-      <button class="primary" id="assess-btn">Run assessment</button>
+      <button class="primary" id="assess-btn">Assess fit with AI</button>
     </div>
 
+    <p class="hint">This is the AI assessment: it checks eligibility, compares the opportunity with your profile, and recommends Apply, Pass, or Park. It uses one API request and can find the opportunity from its URL.</p>
     <div class="stage-status" id="assess-status"></div>
     <div class="assessment-block" id="assessment-block"></div>
     <section class="form-panel" aria-labelledby="manual-entry-heading">
@@ -533,7 +534,7 @@ function goAdd() {
   document.getElementById('assessment-block').className = 'assessment-block';
   document.getElementById('assessment-block').innerHTML = '';
   const btn = document.getElementById('assess-btn');
-  btn.textContent = 'Run assessment';
+  btn.textContent = 'Assess fit with AI';
   btn.disabled = false;
   lastAssessment = null;
   populateCategorySelect();
@@ -541,7 +542,7 @@ function goAdd() {
   document.getElementById('assess-status').className = 'stage-status';
   document.getElementById('assessment-block').className = 'assessment-block';
   document.getElementById('assessment-block').innerHTML = '';
-  document.getElementById('assess-btn').textContent = 'Run assessment';
+  document.getElementById('assess-btn').textContent = 'Assess fit with AI';
   document.getElementById('assess-btn').disabled = false;
   lastAssessment = null;
   render();
@@ -1083,7 +1084,7 @@ function renderDetail() {
       return `<div class="detail-field"><div class="k">${escapeHtml(label)}</div><div class="v ${isMono?'mono':''}">${val ? escapeHtml(val) : '-'}</div></div>`;
     }).join('');
 
-  let assessmentHtml;
+  let assessmentHtml = '';
   if (rec.assessment) {
     const a = rec.assessment;
     assessmentHtml = `
@@ -1118,8 +1119,6 @@ function renderDetail() {
         <p>${escapeHtml(a.recommended_angle || 'None provided.')}</p>
       </div>
     `;
-  } else {
-    assessmentHtml = `<div class="stage-card"><p class="hint" style="margin:0;">Imported from the existing tracker. No assessment on file.</p></div>`;
   }
 
   container.innerHTML = `
@@ -1316,7 +1315,7 @@ async function readAnthropicStream(response) {
   return { content, stop_reason: stopReason };
 }
 
-async function callApi(prompt) {
+async function callApi(prompt, allowWebSearch = false) {
   if (window.location.protocol === 'file:') {
     throw apiRequestError(
       'The assessment API is not available when this HTML file is opened directly. Open the dashboard using its Vercel URL, or run the project locally with `vercel dev`.'
@@ -1330,7 +1329,14 @@ async function callApi(prompt) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 3000,
-        messages: [{ role: "user", content: prompt }]
+        messages: [{ role: "user", content: prompt }],
+        ...(allowWebSearch ? {
+          tools: [{
+            type: "web_search_20250305",
+            name: "web_search",
+            max_uses: 1
+          }]
+        } : {})
       })
     });
   } catch (e) {
@@ -1375,7 +1381,7 @@ async function callApi(prompt) {
   if (textBlocks.length === 0) {
     throw new Error(
       'The API returned no text. stop_reason: "' + stop + '", content types: [' + contentTypes + ']. ' +
-      (stop === 'end_turn' ? 'The prompt may have triggered a content filter — try pasting the call text directly into the Details field rather than leaving it to web search.' : '')
+      (stop === 'end_turn' ? 'Try pasting the opportunity details directly into the Details field.' : '')
     );
   }
   let raw = textBlocks.join('\n').trim().replace(/```json/g, '').replace(/```/g, '').trim();
@@ -1404,9 +1410,9 @@ async function runAssessment() {
   const block = document.getElementById('assessment-block');
   const btn = document.getElementById('assess-btn');
 
-  if (!snippet) {
+  if (!url && !snippet) {
     statusEl.className = 'stage-status visible error';
-    statusEl.textContent = 'Paste the opportunity details first. Assessment no longer searches the web, which avoids slow timeouts and extra API usage. You can still save the entry without AI below.';
+    statusEl.textContent = 'Enter the opportunity URL or paste its details. The assessment can search from a URL, or assess pasted text directly.';
     return;
   }
   btn.disabled = true;
@@ -1416,8 +1422,10 @@ async function runAssessment() {
 
   try {
     statusEl.className = 'stage-status visible working';
-    statusEl.textContent = 'Running one assessment request (web search is off to avoid extra cost and delay)...';
-    const parsed = await callApi(buildAssessPrompt(url, snippet, category));
+    statusEl.textContent = snippet
+      ? 'Assessing the supplied opportunity details in one AI request...'
+      : 'Searching for the linked opportunity and assessing it in one AI request...';
+    const parsed = await callApi(buildAssessPrompt(url, snippet, category), !snippet && Boolean(url));
     const s0 = {
       title: parsed.title,
       provider: parsed.provider,
@@ -1458,7 +1466,7 @@ async function runAssessment() {
     console.error(e);
     statusEl.className = 'stage-status visible error';
     statusEl.textContent = e.message;
-    btn.textContent = 'Run assessment';
+    btn.textContent = 'Assess fit with AI';
     btn.disabled = false;
     btn.onclick = runAssessment;
   }
@@ -1534,15 +1542,15 @@ job, consultancy, training, or conference against a specific profile. Work throu
 four stages internally (eligibility check, criteria extraction, profile mapping,
 summary) and return the complete result in one response. Be strict: do not inflate
 weak alignment to moderate, and do not use generic language like "passionate about"
-or "unique opportunity." Extract only facts explicitly present in the pasted text;
-do not browse, invent facts, or guess an exchange rate. Return all fields in one response.
+or "unique opportunity." Extract only facts explicitly present in the source;
+do not invent facts or guess an exchange rate. Return all fields in one response.
 PROFILE ANCHORS:
 ${PROFILE_ANCHORS}
 
 URL: ${url}
 CATEGORY: ${category}
 PASTED DETAILS FROM THE PAGE:
-${snippet}
+${snippet || '(No details pasted. Use the single available web search to open the supplied URL and find the official opportunity listing. If it cannot be accessed or verified, say so clearly and do not invent facts.)'}
 
 Return ONLY valid JSON, no preamble, matching this exact shape:
 {
