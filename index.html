@@ -690,7 +690,18 @@ async function loadData() {
     setCloudSyncStatus('Not connected. Your data is saved only in this browser.');
   }
   render();
+  openFromHash();
 }
+
+// Deep link from the Command Centre: https://.../#opportunity=<id> opens that record.
+function openFromHash() {
+  const m = /^#opportunity=(.+)$/.exec(location.hash || '');
+  if (!m) return;
+  let id;
+  try { id = decodeURIComponent(m[1]); } catch (e) { return; }
+  if (state.opportunities.some(o => o.id === id && !o.deleted)) goDetail(id);
+}
+window.addEventListener('hashchange', openFromHash);
 
 function saveData() {
   try {

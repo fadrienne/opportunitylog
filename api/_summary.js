@@ -4,6 +4,9 @@
 // deadline field and parsed the same way the app parses them.
 
 const DEADLINE_KEY = { Conferences: 'abstract_deadline' };
+// Where each category keeps its provider or place (Internship has none).
+const PROVIDER_KEY = { 'Grants & Fellowships': 'implementor', 'Consultancies & Jobs': 'implementor', Scholarships: 'implementor', Masters: 'location', PhD: 'location', Trainings: 'location', Conferences: 'location' };
+const LIST_LIMIT = 10;
 const MONTHS = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september', 'october', 'november', 'december'];
 
 function calendar(y, m, d) {
@@ -63,7 +66,10 @@ export function summarise(records, now = new Date()) {
   };
   const cats = new Map();
   let next = null; // soonest upcoming deadline among actionable Apply items
-  let nextAny = null; // fallback: soonest upcoming deadline among any active item
+  let nextAny = null; // fallback: soonest upcoming deadline among open items that are not Pass or Not Eligible
+  const deadlines = []; // upcoming, still open, not passed on
+  const overdue = []; // actionable and past their deadline
+  const waiting = []; // submitted and still pending
 
   for (const rec of Array.isArray(records) ? records : []) {
     if (!rec || typeof rec !== 'object' || rec.deleted || rec.archived) continue;
@@ -96,6 +102,20 @@ export function summarise(records, now = new Date()) {
     const done = actionLc === 'submitted' || actionLc.startsWith('declined') || actionLc.startsWith('deferred');
     const actionable = outcomeLc === 'apply' && !done;
 
+    const item = {
+      id: text(rec.id),
+      title: text(f.title) || 'Untitled opportunity',
+      category: rec.category || 'Other',
+      provider: text(f[PROVIDER_KEY[rec.category]]) || null,
+      deadline: dl ? isoDate(dl) : null,
+      outcome: outcome || null,
+      action: action || null,
+      day: dl ? dl.day : null
+    };
+    if (actionLc === 'submitted') waiting.push(item);
+    else if (dl && days >= 0 && !done && outcomeLc !== 'pass' && outcomeLc !== 'pass (not eligible)') deadlines.push(item);
+    if (actionable && dl && days < 0) overdue.push(item);
+
     const cat = cats.get(rec.category) || { name: rec.category || 'Other', open: 0, nextDay: null, nextDate: null };
     cat.open++;
     if (dl && days >= 0 && (cat.nextDay === null || dl.day < cat.nextDay)) { cat.nextDay = dl.day; cat.nextDate = isoDate(dl); }
@@ -106,9 +126,10 @@ export function summarise(records, now = new Date()) {
       if (actionable && days >= 0 && days <= 14) counts.dueIn14++;
       if (actionable && days >= 0 && days <= 7) counts.dueIn7++;
       if (days >= 0) {
-        const cand = { day: dl.day, label: text(f.title) || 'Untitled opportunity', date: isoDate(dl) };
+        const cand = { day: dl.day, label: text(f.title) || 'Untitled opportunity', date: isoDate(dl), id: text(rec.id) };
         if (actionable && (!next || cand.day < next.day)) next = cand;
-        if (!nextAny || cand.day < nextAny.day) nextAny = cand;
+        const worthShowing = !done && outcomeLc !== 'pass' && outcomeLc !== 'pass (not eligible)';
+        if (worthShowing && (!nextAny || cand.day < nextAny.day)) nextAny = cand;
       }
     }
   }
@@ -118,11 +139,20 @@ export function summarise(records, now = new Date()) {
     component: 'opportunities',
     title: 'Opportunity Log',
     needsYouToday: counts.dueIn7,
-    next: pick ? { label: pick.label, date: pick.date } : null,
+    next: pick ? { label: pick.label, date: pick.date, id: pick.id } : null,
     counts,
     categories: Array.from(cats.values())
       .sort((a, b) => b.open - a.open || String(a.name).localeCompare(String(b.name)))
       .map((c) => ({ name: c.name, open: c.open, nextDate: c.nextDate })),
+    items: {
+      deadlines: deadlines.sort(byDay).slice(0, LIST_LIMIT).map(clean),
+      overdue: overdue.sort(byDay).slice(0, LIST_LIMIT).map(clean),
+      waiting: waiting.sort(byTitle).slice(0, LIST_LIMIT).map(clean)
+    },
     generatedAt: now.toISOString()
   };
 }
+
+const byDay = (a, b) => a.day - b.day || a.title.localeCompare(b.title);
+const byTitle = (a, b) => a.title.localeCompare(b.title);
+const clean = ({ day, ...rest }) => rest;
