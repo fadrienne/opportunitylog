@@ -62,12 +62,17 @@ export function summarise(records, now = new Date()) {
   const counts = {
     active: 0, apply: 0, park: 0, pass: 0, notEligible: 0, notAssessed: 0,
     notStarted: 0, drafting: 0, submitted: 0, awaitingClarification: 0,
-    awaitingDecision: 0, dueIn7: 0, dueIn14: 0, pastDeadline: 0
+    awaitingDecision: 0, dueIn7: 0, dueIn14: 0, pastDeadline: 0,
+    // The Opportunity Log's own home-page numbers: upcoming is any active item with a dated
+    // deadline in the next 60 days (whatever its outcome or action), ideas is any active item
+    // with an idea, plan, task, or an action of Drafting, Not Started or Awaiting Clarification.
+    upcoming: 0, ideas: 0
   };
   const cats = new Map();
   let next = null; // soonest upcoming deadline among actionable Apply items
   let nextAny = null; // fallback: soonest upcoming deadline among open items that are not Pass or Not Eligible
   const deadlines = []; // upcoming, still open, not passed on
+  const upcoming = []; // the log's "Upcoming deadlines": active, dated, 0 to 60 days away
   const overdue = []; // actionable and past their deadline
   const waiting = []; // submitted and still pending
 
@@ -112,6 +117,13 @@ export function summarise(records, now = new Date()) {
       action: action || null,
       day: dl ? dl.day : null
     };
+    const ws = rec.workspace && typeof rec.workspace === 'object' ? rec.workspace : {};
+    if (text(ws.idea) || text(ws.plan) || (Array.isArray(ws.tasks) && ws.tasks.length) ||
+        ['Drafting', 'Not Started', 'Awaiting Clarification'].includes(f.action)) counts.ideas++;
+    if (dl && days >= 0 && days <= 60) {
+      counts.upcoming++;
+      upcoming.push({ ...item, soon: actionable && days <= 7 });
+    }
     if (actionLc === 'submitted') waiting.push(item);
     else if (dl && days >= 0 && !done && outcomeLc !== 'pass' && outcomeLc !== 'pass (not eligible)') deadlines.push(item);
     if (actionable && dl && days < 0) overdue.push(item);
@@ -145,6 +157,7 @@ export function summarise(records, now = new Date()) {
       .sort((a, b) => b.open - a.open || String(a.name).localeCompare(String(b.name)))
       .map((c) => ({ name: c.name, open: c.open, nextDate: c.nextDate })),
     items: {
+      upcoming: upcoming.sort(byDay).slice(0, LIST_LIMIT).map(clean),
       deadlines: deadlines.sort(byDay).slice(0, LIST_LIMIT).map(clean),
       overdue: overdue.sort(byDay).slice(0, LIST_LIMIT).map(clean),
       waiting: waiting.sort(byTitle).slice(0, LIST_LIMIT).map(clean)
