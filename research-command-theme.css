@@ -36,6 +36,9 @@
   --radius-6: 6px; --radius-8: 8px; --radius-9: 9px; --radius-10: 10px; --radius-12: 12px; --radius-13: 13px;
   --radius-14: 14px; --radius-16: 16px; --radius-20: 20px;
   --shadow-card: 0 2px 5px rgba(72, 35, 91, 0.08);
+  /* Brand palette: the muted set (orchid, moss, lavender, noir) plus the pink, lime and teal from the second brand. Not used by any component yet; reach for these as accents. */
+  --brand-orchid: #ded2cd; --brand-moss: #aaa48b; --brand-lavender: #988193; --brand-noir: #4d4a56;
+  --brand-pink: #d0006f; --brand-lime: #d3ff29; --brand-teal: #00b2a9;
   --control-sm: 36px; --control-md: 42px; --control-lg: 50px; --shell-max: 1280px;
 }
 
