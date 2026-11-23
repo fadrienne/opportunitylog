@@ -1,9 +1,5 @@
 {
-<<<<<<< HEAD
- "exportedAt": "2026-11-23T08:28:44Z",
-=======
- "exportedAt": "2026-11-23T14:00:48Z",
->>>>>>> d5c720ace214393751b5e7f9d34d381297efb155
+ "exportedAt": "2026-11-09T08:20:19Z",
  "opportunities": [
   {
    "id": "cambridge-africa-climate-collaborative-research-20261123",
@@ -12,118 +8,7 @@
    "discoveredAt": "2026-11-23T04:20:51Z",
    "firstSeen": "2026-11-23",
    "fitScore": 2,
-<<<<<<< HEAD
-   "name": "Blue Food Futures Research Grant Program and Fellowship (Stanford Center for Ocean Solutions)",
-   "type": "Research grant/fellowship",
-   "url": "https://bluefood.earth/fellowships/",
-   "why": "Blue-economy adjacent (food systems, equity, climate), but explicitly targets early-career researchers within 5 years of PhD, a poor match for her 15+ years of experience.",
-   "id": "blue-food-futures-research-grant-fellowship-stanfo-20260907"
-  },
-  {
-   "deadlineISO": "2027-01-15",
-   "deadlineText": "15 January 2027",
-   "discoveredAt": "2026-11-23T04:20:51Z",
-   "firstSeen": "2026-11-23",
-   "fitScore": 2,
    "name": "Cambridge Africa Climate Collaborative Research Fund 2026/27 (Mastercard Foundation - University of Cambridge)",
-   "type": "Research grant",
-   "url": "https://www.cambridge-africa.cam.ac.uk/initiatives/2026-call-for-applications",
-   "why": "Up to GBP80,000 climate-resilience research grant open to any discipline, which could cover coastal/ocean climate-resilience work, but requires pairing with a Cambridge-affiliated postdoc-or-above co-applicant and has no explicit ocean/SIDS framing.",
-   "id": "cambridge-africa-climate-collaborative-research-20261123"
-  },
-  {
-   "deadlineText": "Rolling; informal supervisor contact encouraged, no fixed deadline for self-proposed topics",
-   "discoveredAt": "2026-09-21T04:46:35Z",
-   "firstSeen": "2026-09-21",
-   "fitScore": 3,
-   "name": "Cardiff University - self-proposed PhD pathway (Earth & Ocean Sciences)",
-   "type": "PhD scholarship (self-proposed pathway)",
-   "url": "https://www.cardiff.ac.uk/study/postgraduate/research/programmes/programme/earth-sciences",
-   "why": "Explicitly welcomes self-proposed research topics outside advertised projects in a department with marine/geospatial expertise, though no named supervisor match confirmed yet.",
-   "id": "cardiff-self-proposed-phd-earth-ocean-sciences-20260921"
-  },
-  {
-   "deadlineISO": "2026-12-11",
-   "deadlineText": "11 December 2026, 23:59 GMT",
-   "discoveredAt": "2026-11-06T00:00:00Z",
-   "firstSeen": "2026-11-06",
-   "fitScore": 4,
-   "name": "Commonwealth Blue Charter Incubator Round II 2026",
-   "type": "Research/implementation grant",
-   "url": "https://thecommonwealth.org/commonwealth-blue-charter-incubator-round-2",
-   "why": "Government-led ocean grant (GBP 20k-50k) with funding earmarked for Pacific/Caribbean SIDS and South Asia for blue economy, marine pollution, and ocean-climate projects; SHORE could enter as technical/implementation partner alongside a Seychelles government ministry, leveraging Francesca's prior Director General Maritime Ocean Management role.",
-   "id": "commonwealth-blue-charter-incubator-round-ii-2026-20261106"
-  },
-  {
-   "deadlineISO": "2026-09-18",
-   "deadlineText": "18 September 2026",
-   "discoveredAt": "2026-09-07T04:55:46Z",
-   "firstSeen": "2026-09-07",
-   "fitScore": 3,
-   "name": "CSEA Africa's Data Future Fellowship 2026",
-   "type": "Fellowship",
-   "url": "https://cseaafrica.org/postdetails/call-for-application-2026-africas-data-future-fellowship-1",
-   "why": "3-month virtual fellowship on data governance/digital policy, hits the data sovereignty anchor directly, but no ocean/marine angle and a modest ~$1,500 stipend.",
-   "id": "csea-africas-data-future-fellowship-2026-20260907"
-  },
-  {
-   "deadlineText": "Small-size: 26 Oct 2026 · Medium-size: 16 Nov 2026",
-   "discoveredAt": "2026-09-03T05:00:00Z",
-   "firstSeen": "2026-09-03",
-   "fitScore": 3,
-   "name": "Global EbA Fund Grants 2026 — Medium-Size track",
-   "type": "Research/implementation grant",
-   "url": "https://opportunitiesforyouth.org/2026/08/28/global-eba-fund-grants-2026-up-to-500000-for-ecosystem-based-adaptation-projects-in-developing-countries/",
-   "why": "SHORE could apply institutionally; overlaps climate-resilience work but isn't marine-specific.",
-   "id": "global-eba-fund-grants-2026-medium-size"
-  },
-  {
-   "applicationStatus": "applied",
-   "deadlineISO": "2027-10-15",
-   "deadlineText": "Closed for the 2026 cycle since 15 October. Next window opens 1 July 2027.",
-   "discoveredAt": "2026-11-23T04:20:51Z",
-   "firstSeen": "2026-11-06",
-   "fitScore": 4,
-   "name": "Gulbenkian Institute for Advanced Study (GIAS) Fellowship",
-   "type": "Fellowship (open topic, self-written proposal)",
-   "url": "https://gulbenkian.pt/en/bolsas-lista/fellowships-gulbenkian-institute-for-advanced-study/",
-   "why": "Open-topic fellowship (any academic/artistic field, no lab work, no stated age or nationality bar) that could house her self-proposed High-Income SIDS Paradox research under her own written proposal. Call Conditions PDF confirms the 1 July-15 October annual window and no age/nationality restriction.",
-   "id": "gulbenkian-gias-open-topic-fellowship"
-  },
-  {
-   "deadlineISO": "2026-11-23",
-   "deadlineText": "23 November 2026 (today - likely already closing/closed by the time this is reviewed)",
-   "discoveredAt": "2026-11-23T04:20:51Z",
-   "firstSeen": "2026-11-23",
-   "fitScore": 2,
-   "name": "International Blue Carbon Institute (IBCI) Fellowship Program 2026 (Conservation International)",
-   "type": "Fellowship/Research grant",
-   "url": "https://www.conservation.org/ibci/fellowship",
-   "why": "US$60,000 fellowship for an experienced blue carbon scientist/practitioner (mangroves, seagrass); strong blue-economy/SIDS fit, but requires an advanced Master's or PhD plus 5+ years' expertise (she holds a Bachelor's), and the deadline falls today.",
-   "id": "international-blue-carbon-institute-ibci-fellow-20261123"
-  },
-  {
-   "deadlineISO": "2026-11-15",
-   "deadlineText": "Stage 1 (priority): 15 Sept 2026; Stage 2 (final): 15 Nov 2026",
-   "discoveredAt": "2026-09-07T04:55:46Z",
-   "firstSeen": "2026-09-07",
-   "fitScore": 2,
-   "name": "Kunming Biodiversity Fund 2026 Call for Proposals",
-   "type": "Research/implementation grant",
-   "url": "https://www.unep.org/events/award/2026-call-proposals-kunming-biodiversity-fund",
-   "why": "Up to $800k for biodiversity/ecosystem projects, but proponents must be a beneficiary-country government or UN entity, SHORE would need a government co-applicant, and it is not marine-specific.",
-   "id": "kunming-biodiversity-fund-2026-call-for-proposals-20260907"
-  },
-  {
-   "deadlineISO": "2026-10-21",
-   "deadlineText": "21 October 2026",
-   "discoveredAt": "2026-09-21T04:46:35Z",
-   "firstSeen": "2026-09-21",
-   "fitScore": 1,
-   "name": "National Geographic Visiting Scientist Program - Southern Ocean",
-=======
-   "name": "Cambridge Africa Climate Collaborative Research Fund 2026/27 (Mastercard Foundation - University of Cambridge)",
->>>>>>> d5c720ace214393751b5e7f9d34d381297efb155
    "type": "Research grant",
    "url": "https://www.cambridge-africa.cam.ac.uk/initiatives/2026-call-for-applications",
    "why": "Up to GBP80,000 climate-resilience research grant open to any discipline, which could cover coastal/ocean climate-resilience work, but requires pairing with a Cambridge-affiliated postdoc-or-above co-applicant and has no explicit ocean/SIDS framing."
@@ -164,6 +49,18 @@
    "id": "oceanx-iie-ocean-futures-fellowship-20261109"
   },
   {
+   "deadlineISO": "2027-01-15",
+   "deadlineText": "15 January 2027",
+   "discoveredAt": "2026-11-23T04:20:51Z",
+   "firstSeen": "2026-11-23",
+   "fitScore": 2,
+   "name": "Cambridge Africa Climate Collaborative Research Fund 2026/27 (Mastercard Foundation - University of Cambridge)",
+   "type": "Research grant",
+   "url": "https://www.cambridge-africa.cam.ac.uk/initiatives/2026-call-for-applications",
+   "why": "Up to GBP80,000 climate-resilience research grant open to any discipline, which could cover coastal/ocean climate-resilience work, but requires pairing with a Cambridge-affiliated postdoc-or-above co-applicant and has no explicit ocean/SIDS framing.",
+   "id": "cambridge-africa-climate-collaborative-research-20261123"
+  },
+  {
    "deadlineText": "First round closed 7 Nov 2025 (2026 stipend rate shown); stated to remain open until filled thereafter - reconfirm current status directly with UOW",
    "discoveredAt": "2026-11-09T04:07:31Z",
    "firstSeen": "2026-11-09",
@@ -187,7 +84,6 @@
    "id": "commonwealth-blue-charter-incubator-round-ii-2026-20261106"
   },
   {
-   "id": "gulbenkian-gias-open-topic-fellowship",
    "applicationStatus": "applied",
    "deadlineISO": "2027-10-15",
    "deadlineText": "Closed for the 2026 cycle since 15 October. Next window opens 1 July 2027.",
@@ -197,7 +93,32 @@
    "name": "Gulbenkian Institute for Advanced Study (GIAS) Fellowship",
    "type": "Fellowship (open topic, self-written proposal)",
    "url": "https://gulbenkian.pt/en/bolsas-lista/fellowships-gulbenkian-institute-for-advanced-study/",
-   "why": "Open-topic fellowship (any academic/artistic field, no lab work, no stated age or nationality bar) that could house her self-proposed High-Income SIDS Paradox research under her own written proposal. Call Conditions PDF confirms the 1 July-15 October annual window and no age/nationality restriction."
+   "why": "Open-topic fellowship (any academic/artistic field, no lab work, no stated age or nationality bar) that could house her self-proposed High-Income SIDS Paradox research under her own written proposal.",
+   "id": "gulbenkian-gias-open-topic-fellowship"
+  },
+  {
+   "deadlineISO": "2026-11-15",
+   "deadlineText": "Stage 1 (priority): 15 Sept 2026; Stage 2 (final): 15 Nov 2026",
+   "discoveredAt": "2026-09-07T04:55:46Z",
+   "firstSeen": "2026-09-07",
+   "fitScore": 2,
+   "name": "Kunming Biodiversity Fund 2026 Call for Proposals",
+   "type": "Research/implementation grant",
+   "url": "https://www.unep.org/events/award/2026-call-proposals-kunming-biodiversity-fund",
+   "why": "Up to $800k for biodiversity/ecosystem projects, but proponents must be a beneficiary-country government or UN entity, SHORE would need a government co-applicant, and it is not marine-specific.",
+   "id": "kunming-biodiversity-fund-2026-call-for-proposals-20260907"
+  },
+  {
+   "deadlineISO": "2026-10-21",
+   "deadlineText": "21 October 2026",
+   "discoveredAt": "2026-09-21T04:46:35Z",
+   "firstSeen": "2026-09-21",
+   "fitScore": 1,
+   "name": "National Geographic Visiting Scientist Program - Southern Ocean",
+   "type": "Research grant",
+   "url": "https://www.nationalgeographic.org/explore/grants-investments",
+   "why": "Funds an embedded field scientist on a Southern Ocean expedition voyage; open to experienced professionals, but geographically confined to the Southern Ocean with no Indian Ocean/SIDS angle.",
+   "id": "natgeo-visiting-scientist-southern-ocean-20260921"
   },
   {
    "deadlineISO": "2026-12-01",
@@ -807,20 +728,6 @@
    "id": "afdb-shou-phd-scholarship-2027-intake-20261109"
   },
   {
-<<<<<<< HEAD
-   "deadlineISO": "2026-10-30",
-   "deadlineText": "30 October 2026",
-   "discoveredAt": "2026-11-23T04:20:51Z",
-   "firstSeen": "2026-11-23",
-   "name": "University of Southampton PhD project - \"An Ocean in Balance: Integrating marine data, spatial planning and community voices for just decision-making in offshore energy\"",
-   "reason": "expired",
-   "reasonDetail": "Deadline 30 October 2026 already passed.",
-   "type": "PhD scholarship (advertised topic, fully funded)",
-   "url": "https://www.southampton.ac.uk/study/postgraduate-research/projects/an-ocean-in-balance-integrating-marine-data-spatial",
-   "why": "Combines marine data, spatial planning and stakeholder/community engagement, a close match to her MSP + stakeholder-engagement interests; funding was UK-only.",
-   "id": "an-ocean-in-balance-integrating-marine-data-20261123"
-  },
-  {
    "deadlineISO": "2026-01-15",
    "deadlineText": "15 January 2026, 5:00 PM EAT",
    "discoveredAt": "2026-11-06T15:31:15Z",
@@ -834,21 +741,6 @@
    "id": "awf-geospatial-leaders-fellowship-2026-20261106"
   },
   {
-   "deadlineISO": "2026-03-10",
-   "deadlineText": "10 March 2026",
-   "discoveredAt": "2026-11-16T00:00:00Z",
-   "firstSeen": "2026-11-16",
-   "name": "BOKU Aquahub - PhD, Marine Connectivity Network (MPAs, East Africa)",
-   "reason": "expired",
-   "reasonDetail": "Deadline 10 March 2026 already passed.",
-   "type": "PhD scholarship (advertised topic)",
-   "url": "https://aquahub.boku.ac.at/funding-fellowships/call-applications-phd-marine-connectivity-network",
-   "why": "PhD on marine protected area connectivity and climate resilience in East Africa - regional and thematic relevance to the MSP/SIDS anchors.",
-   "id": "boku-aquahub-phd-marine-connectivity-network-20261116"
-  },
-  {
-=======
->>>>>>> d5c720ace214393751b5e7f9d34d381297efb155
    "deadlineISO": "2026-08-30",
    "deadlineText": "30 August 2026",
    "discoveredAt": "2026-11-09T04:07:31Z",
@@ -860,99 +752,6 @@
    "url": "https://bowseat.org/programs/true-blue-fellowship/apply",
    "why": "Peer mentorship and up to USD 2,500 funding for youth-led ocean/climate projects.",
    "id": "bow-seat-true-blue-fellowship-2026-20261109"
-  },
-  {
-<<<<<<< HEAD
-   "deadlineText": "Annual deadline 30 August (ET); next cycle is the 2027 fellowship year",
-   "discoveredAt": "2026-11-16T00:00:00Z",
-   "firstSeen": "2026-11-16",
-   "name": "Bow Seat True Blue Fellowship (2027 cycle)",
-   "reason": "age",
-   "reasonDetail": "Age cap 16-24 years; Francesca is 49.",
-   "type": "Fellowship (creative arts / youth)",
-   "url": "https://nhee.org/?p=5452",
-   "why": "Seed-funded fellowship for creative-arts projects on ocean, waterway and climate issues - touches the ocean-literacy anchor loosely, but is a youth programme.",
-   "id": "bow-seat-true-blue-fellowship-2027-20261116"
-  },
-  {
-   "deadlineISO": "2024-04-26",
-   "deadlineText": "26 April 2024, noon BST",
-   "discoveredAt": "2026-11-06T15:31:15Z",
-   "firstSeen": "2026-11-06",
-   "name": "Commonwealth Secretariat RFQ: Develop Seychelles Blue Carbon Policy",
-   "reason": "expired",
-   "reasonDetail": "Deadline 26 Apr 2024, long passed; also required a Master's degree for each named expert role.",
-   "type": "Consultancy",
-   "url": "https://thecommonwealth.org/rfq-consultancy-develop-seychelles-blue-carbon-policy",
-   "why": "Technical assistance to the Government of Seychelles to draft a national Blue Carbon Policy, including a Marine Scientist (National Expert) role - strong profile match in principle.",
-   "id": "commonwealth-rfq-seychelles-blue-carbon-policy-20261106"
-  },
-  {
-=======
->>>>>>> d5c720ace214393751b5e7f9d34d381297efb155
-   "deadlineISO": "2026-05-31",
-   "deadlineText": "31 May 2026",
-   "discoveredAt": "2026-11-09T04:07:31Z",
-   "firstSeen": "2026-11-09",
-   "name": "DOSI/Ocean45 BBNJ ECOP Researcher Position (Annex I ecological criteria)",
-   "reason": "expired",
-   "reasonDetail": "Deadline 31 May 2026 already passed; also restricted to 'Early Career Ocean Professionals' with up to 10 years' experience, which her 15+ years would not meet.",
-   "type": "Research position/fellowship",
-   "url": "https://www.dosi-project.org/new-opportunity-ecop-researcher-position-to-support-bbnj-implementation/",
-   "why": "Remote USD 40,000 researcher role evaluating BBNJ Annex I ecological criteria for high-seas MPAs - strong thematic fit to the ocean-governance/BBNJ anchor.",
-   "id": "dosi-ocean45-bbnj-ecop-researcher-position-20261109"
-  },
-  {
-   "deadlineISO": "2026-05-13",
-   "deadlineText": "13 May 2026, 23:59 UTC",
-   "discoveredAt": "2026-11-09T04:07:31Z",
-   "firstSeen": "2026-11-09",
-   "name": "POGO-SCOR Fellowship Programme 2026",
-   "reason": "expired",
-   "reasonDetail": "Deadline 13 May 2026 already passed; also aimed at early-career scientists and postgraduate students rather than a 15+-year professional.",
-   "type": "Fellowship (visiting researcher, travel)",
-   "url": "https://pogo-ocean.org/capacity-development/pogo-scor-fellowship-programme/",
-   "why": "Up to EUR 5,000 visiting fellowship for developing-country ocean scientists to work at another POGO member institution - decent capacity-building fit but modest funding and early-career framing.",
-   "id": "pogo-scor-fellowship-programme-2026-20261109"
-  },
-  {
-   "deadlineISO": "2026-02-15",
-   "deadlineText": "15 February 2026",
-   "discoveredAt": "2026-11-09T04:07:31Z",
-   "firstSeen": "2026-11-09",
-   "name": "Sustainable Ocean Alliance (SOA) Ocean Leaders Fellowship 2026",
-   "reason": "age",
-   "reasonDetail": "Explicit age cap 18-35; Francesca is 49. (2026 cycle deadline 15 Feb 2026 has also passed.)",
-   "type": "Fellowship",
-   "url": "https://www.soalliance.org/ocean-leaders-fellowship",
-   "why": "Fully funded fellowship for emerging ocean conservation and climate leaders - strong thematic fit but reserved for young/emerging leaders.",
-   "id": "soa-ocean-leaders-fellowship-2026-20261109"
-  },
-  {
-   "deadlineISO": "2025-07-27",
-   "deadlineText": "27 July 2025",
-   "discoveredAt": "2026-11-09T04:07:31Z",
-   "firstSeen": "2026-11-09",
-   "name": "University of Sydney Postgraduate Research Scholarship in Marine Spatial Planning",
-   "reason": "expired",
-   "reasonDetail": "Deadline 27 July 2025 already passed (over a year ago).",
-   "type": "PhD scholarship (advertised topic)",
-   "url": "https://sydney.edu.au/scholarships/d/postgraduate-research-scholarship-in-marine-spatial-planning.html",
-   "why": "Funded PhD stipend in geography/marine geosciences at University of Sydney's School of Geosciences, on marine spatial planning - strong thematic fit, but this round has long closed.",
-   "id": "sydney-msp-postgrad-research-scholarship-20261109"
-  },
-  {
-   "deadlineISO": "2026-01-15",
-   "deadlineText": "15 January 2026, 5:00 PM EAT",
-   "discoveredAt": "2026-11-06T15:31:15Z",
-   "firstSeen": "2026-11-06",
-   "name": "AWF Geospatial Leaders Fellowship (African Wildlife Foundation x ESRI)",
-   "reason": "age",
-   "reasonDetail": "Explicit age cap 18-35 (\"under 35\"); Francesca is 49.",
-   "type": "Fellowship",
-   "url": "https://opportunitiesforeveryone.net/applications-are-now-open-for-the-fully-funded-2026-awf-geospatial-leaders-fellowship-for-african-gis-professionals/",
-   "why": "10-month fully-funded GIS training and mentorship fellowship for African conservation professionals, with an in-person workshop in Nairobi.",
-   "id": "awf-geospatial-leaders-fellowship-2026-20261106"
   },
   {
    "deadlineISO": "2024-04-26",
@@ -1134,7 +933,6 @@
    "id": "ocpp-scholarships-2026-20261106"
   },
   {
-<<<<<<< HEAD
    "deadlineISO": "2026-05-13",
    "deadlineText": "13 May 2026, 23:59 UTC",
    "discoveredAt": "2026-11-09T04:07:31Z",
@@ -1146,19 +944,6 @@
    "url": "https://pogo-ocean.org/capacity-development/pogo-scor-fellowship-programme/",
    "why": "Up to EUR 5,000 visiting fellowship for developing-country ocean scientists to work at another POGO member institution - decent capacity-building fit but modest funding and early-career framing.",
    "id": "pogo-scor-fellowship-programme-2026-20261109"
-  },
-  {
-   "deadlineISO": "2026-05-13",
-   "deadlineText": "13 May 2026, 23:59 UTC",
-   "discoveredAt": "2026-11-16T00:00:00Z",
-   "firstSeen": "2026-11-16",
-   "name": "POGO-SCOR Fellowship Programme 2026",
-   "reason": "expired",
-   "reasonDetail": "Deadline 13 May 2026 already passed.",
-   "type": "Fellowship (short training placement)",
-   "url": "https://pogo-ocean.org/capacity-development/pogo-scor-fellowship-programme/",
-   "why": "Short training placement in ocean observation/data collection for scientists from developing countries - thematic overlap with the hydrospatial/data anchors, though aimed at early-career/postgraduate applicants.",
-   "id": "pogo-scor-fellowship-programme-2026-20261116"
   },
   {
    "deadlineISO": "2026-02-15",
@@ -1174,19 +959,6 @@
    "id": "soa-ocean-leaders-fellowship-2026-20261109"
   },
   {
-   "deadlineISO": "2026-11-16",
-   "deadlineText": "Compulsory pre-proposal stage closed 16 November 2026; full-proposal stage 14 June 2027 is not accessible without it",
-   "discoveredAt": "2026-11-23T04:20:51Z",
-   "firstSeen": "2026-11-23",
-   "name": "Sustainable Blue Economy Partnership (SBEP) - Fourth Joint Transnational Co-funded Call 2026",
-   "reason": "expired",
-   "reasonDetail": "Mandatory pre-proposal deadline 16 November 2026 already passed; cannot enter at the full-proposal stage.",
-   "type": "Research grant (consortium call)",
-   "url": "https://www.nwo.nl/en/calls/sustainable-blue-economy-partnership-fourth-joint-transnational-co-funded-call",
-   "why": "Blue economy research funding overlapping with her blue economy/hydrospatial-data interests, but the call is a multi-country consortium call and explicitly excludes PhD-position funding.",
-   "id": "sustainable-blue-economy-partnership-sbep-fourth-20261123"
-  },
-  {
    "deadlineISO": "2025-07-27",
    "deadlineText": "27 July 2025",
    "discoveredAt": "2026-11-09T04:07:31Z",
@@ -1200,8 +972,6 @@
    "id": "sydney-msp-postgrad-research-scholarship-20261109"
   },
   {
-=======
->>>>>>> d5c720ace214393751b5e7f9d34d381297efb155
    "deadlineISO": "2026-09-13",
    "deadlineText": "13 September 2026",
    "discoveredAt": "2026-11-06T15:31:15Z",
