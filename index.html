@@ -1832,7 +1832,7 @@ async function callApi(prompt, allowWebSearch = false) {
   try {
     response = await fetch("/api/assess", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "X-Sync-Key": localStorage.getItem('opportunity-sync-key') || '' },
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 3000,
